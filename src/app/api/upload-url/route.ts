@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { claveDeAlmacen, firmarSubida, validarArchivo } from '@/lib/r2'
+import { claveDeAlmacen, firmarSubida, validarArchivo } from '@/lib/almacen'
 
 /**
  * Entrega una URL firmada para que el navegador suba el archivo directo
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     // va en su propio prefijo y no pasa por la validación de formatos.
     if (tipo === 'texto') {
       const storageKey = `text/${uuid}.txt`
-      const url = await firmarSubida(storageKey, 'text/plain; charset=utf-8')
+      const { url } = await firmarSubida(storageKey)
       return NextResponse.json({ url, storageKey })
     }
 
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     }
 
     const storageKey = claveDeAlmacen(uuid, filename)
-    const url = await firmarSubida(storageKey, mime)
+    const { url } = await firmarSubida(storageKey)
     return NextResponse.json({ url, storageKey })
   } catch (e) {
     console.error('[upload-url]', e)

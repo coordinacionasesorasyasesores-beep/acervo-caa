@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { firmarDescarga } from '@/lib/r2'
+import { firmarDescarga } from '@/lib/almacen'
 
 /**
  * Entrega una URL firmada de vida corta para una versión concreta.

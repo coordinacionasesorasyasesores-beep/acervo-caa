@@ -22,7 +22,7 @@
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
-import { firmarSubida, claveDeAlmacen, validarArchivo } from '../src/lib/r2.ts'
+import { firmarSubida, claveDeAlmacen, validarArchivo } from '../src/lib/almacen.ts'
 import { extraerXlsx } from '../src/lib/extract/xlsx.ts'
 import { extraerPptx } from '../src/lib/extract/pptx.ts'
 
@@ -106,13 +106,15 @@ async function procesar(ruta: string) {
   const texto = ext === 'pptx' ? await extraerPptx(ab) : await extraerXlsx(ab)
 
   const storageKey = claveDeAlmacen(uuid, nombre)
-  const r1 = await fetch(await firmarSubida(storageKey, mime), {
+  const { url: urlDoc } = await firmarSubida(storageKey)
+  const r1 = await fetch(urlDoc, {
     method: 'PUT', body: buf, headers: { 'content-type': mime },
   })
   r1.ok ? ok(`archivo subido a ${storageKey}`) : mal(`PUT del archivo: ${r1.status} ${await r1.text()}`)
 
   const textKey = `text/${uuid}.txt`
-  const r2 = await fetch(await firmarSubida(textKey, 'text/plain; charset=utf-8'), {
+  const { url: urlTexto } = await firmarSubida(textKey)
+  const r2 = await fetch(urlTexto, {
     method: 'PUT', body: texto.texto, headers: { 'content-type': 'text/plain; charset=utf-8' },
   })
   r2.ok ? ok(`texto subido a ${textKey}`) : mal(`PUT del texto: ${r2.status}`)
