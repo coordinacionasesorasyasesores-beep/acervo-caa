@@ -644,6 +644,20 @@ implementación y que cuestan horas si se descubren sin aviso.
 - **La versión de Next la manda OpenNext.** El adaptador de Cloudflare solo soporta
   `>=15.5.21 <16 || >=16.2.11`; las versiones intermedias no. Antes de actualizar
   Next hay que revisar el rango del adaptador, no al revés.
+- **`next build` y `next dev` se pisan.** Los dos escriben en el mismo `.next`, así
+  que compilar para producción con el servidor de desarrollo encendido deja la
+  pantalla sin estilos y con los chunks rotos. No se rompe nada del código —los
+  tokens siguen en `globals.css`— pero el síntoma parece un desastre de diseño y
+  manda a buscar el problema donde no está. Si pasa: detener el `dev`, `rm -rf .next`
+  y volver a levantarlo.
+- **`create or replace function` con otra lista de argumentos no reemplaza:**
+  crea una sobrecarga. Con dos firmas del mismo nombre, PostgREST no sabe a cuál
+  llamar y responde un error que no menciona la palabra "sobrecarga" por ningún
+  lado. Al cambiarle los parámetros a una función hay que tirar la firma anterior
+  con `drop function if exists ... (firma vieja)` en la misma migración.
+- **Una prueba que siembra datos tiene que borrarlos.** La corrida que deja basura
+  hace fallar a la siguiente con totales que no cuadran, y se pierde media hora
+  buscando en el buscador un bug que no existe.
 - **`service_role` no tiene permiso de tabla.** La migración de grants otorga
   `select, insert, update` a `authenticated` y a nadie más, así que la llave de
   servicio no puede leer ni escribir ninguna tabla del esquema `public`: PostgREST

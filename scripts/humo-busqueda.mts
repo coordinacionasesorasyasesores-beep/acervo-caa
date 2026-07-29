@@ -14,7 +14,15 @@
  * Escribe en la base local. No apuntarlo nunca al proyecto remoto.
  */
 import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { leerFiltros, urlCon } from '../src/lib/busqueda.ts'
+
+/** Deshace una URL construida por `urlCon` para volver a leerla. */
+function paramsDe(url: string): Record<string, string> {
+  const p = new URLSearchParams(url.split('?')[1] ?? '')
+  return Object.fromEntries(p.entries())
+}
 
 for (const linea of readFileSync('.env.local', 'utf8').split('\n')) {
   const m = linea.match(/^([A-Z0-9_]+)=(.*)$/)
@@ -231,15 +239,56 @@ try {
     pag2.length === 1 && pag1[0].id !== pag2[0].id,
     'la segunda página trae lo que falta, sin repetir',
   )
+
+  // ── 8. el árbol cuenta lo que hay en pantalla ──────────────────
+  console.log('\n8. Conteos del árbol')
+  const contar = async (params: Record<string, unknown>) => {
+    const { data } = await sb.rpc('topic_counts', params)
+    return new Map((data as { topic_id: number; cuantos: number }[]).map((c) => [c.topic_id, Number(c.cuantos)]))
+  }
+  const sinBusqueda = await contar({})
+  const conBusqueda = await contar({ p_query: `${MARCA} quirófanos` })
+  comprobar(
+    (conBusqueda.get(padre.id) ?? 0) < (sinBusqueda.get(padre.id) ?? 0),
+    'con búsqueda activa, el árbol cuenta los resultados y no el acervo entero',
+  )
+
+  // ── 9. la URL conserva lo que el usuario eligió ────────────────
+  // Estos dos se rompen sin que ninguna consulta falle: la pantalla
+  // simplemente ignora el clic, y eso no lo detecta ninguna prueba de SQL.
+  console.log('\n9. Estado en la URL')
+  const base0 = leerFiltros({})
+  const conTexto = leerFiltros({ q: 'quirófanos' })
+  const porFecha = leerFiltros(paramsDe(urlCon(conTexto, { orden: 'reciente', pagina: 1 })))
+  comprobar(porFecha.orden === 'reciente', 'elegir "ordenar por fecha" sobrevive al viaje por la URL')
+  const dePaso = leerFiltros(paramsDe(urlCon(conTexto, { anios: [2025], pagina: 1 })))
+  comprobar(
+    dePaso.q === 'quirófanos' && dePaso.anios.length === 1,
+    'agregar una faceta conserva el texto buscado',
+  )
+  comprobar(base0.orden === 'reciente', 'sin texto, el orden por relevancia no aplica')
 } finally {
   // ── limpieza ─────────────────────────────────────────────────────
-  // Se borra por SQL y no desde aquí a propósito: `delete` no se le otorga
-  // a nadie en el esquema (regla 2, "nada se borra"), y esa puerta tiene
-  // que seguir cerrada aunque sea incómodo para una prueba.
-  console.log(`\nPara borrar los ${creados.length} documentos de prueba:`)
-  console.log(
-    `  docker exec supabase_db_acervo-caa psql -U postgres -d postgres \\\n    -c "delete from documents where title like '${MARCA}%';"`,
-  )
+  // Se borra por psql y no desde la sesión de la app porque `delete` no se
+  // le otorga a nadie en el esquema (regla 2, "nada se borra"), y esa
+  // puerta tiene que seguir cerrada aunque le estorbe a una prueba.
+  //
+  // Limpiar es parte de la prueba, no un paso aparte: una corrida que deja
+  // basura hace fallar a la siguiente con números que no cuadran, y se
+  // pierde media hora buscando un bug en el buscador que no existe.
+  try {
+    execFileSync('docker', [
+      'exec', 'supabase_db_acervo-caa',
+      'psql', '-U', 'postgres', '-d', 'postgres', '-q',
+      '-c', `delete from documents where title like '${MARCA}%';`,
+    ])
+    console.log(`\n🧹 ${creados.length} documentos de prueba borrados.`)
+  } catch {
+    console.log(`\n⚠️  No se pudieron borrar los documentos de prueba. Hazlo con:`)
+    console.log(
+      `  docker exec supabase_db_acervo-caa psql -U postgres -d postgres \\\n    -c "delete from documents where title like '${MARCA}%';"`,
+    )
+  }
 }
 
 console.log(fallos === 0 ? '\n══ TODO PASÓ ══' : `\n══ ${fallos} FALLO(S) ══`)

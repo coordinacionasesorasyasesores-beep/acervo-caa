@@ -242,14 +242,33 @@ $$;
 -- Para el árbol lateral: un tema sin documentos se enseña apagado en
 -- lugar de esconderse, porque el catálogo es la estructura del acervo
 -- y saber que algo está vacío también informa.
-create or replace function public.topic_counts(p_statuses text[] default null)
+
+-- Se tira la firma anterior a propósito. `create or replace` con otra
+-- lista de argumentos no reemplaza: crea una sobrecarga, y entonces
+-- PostgREST no sabe a cuál de las dos llamar y responde un error que no
+-- menciona la palabra "sobrecarga" por ningún lado.
+drop function if exists public.topic_counts(text[]);
+create or replace function public.topic_counts(
+  p_statuses text[] default null,
+  p_query    text   default null
+)
 returns table (topic_id int, cuantos bigint)
 language sql
 stable
 as $$
+  with consulta as (
+    select case
+             when coalesce(trim(p_query), '') = '' then null
+             else websearch_to_tsquery('spanish', p_query)
+           end as q
+  )
   select dt.topic_id, count(distinct dt.document_id)
   from public.document_topics dt
   join public.documents d on d.id = dt.document_id
+  left join public.versions v on v.id = d.current_version_id
+  cross join consulta c
   where d.status = any(coalesce(p_statuses, array['publicado']))
+    and (c.q is null or d.search_vector @@ c.q or v.search_vector @@ c.q)
   group by dt.topic_id;
 $$;
+

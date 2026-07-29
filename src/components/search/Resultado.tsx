@@ -9,7 +9,14 @@ import { trozosResaltados, type Resultado as Fila } from '@/lib/busqueda'
  * si ese es el documento, y una lista de títulos lo obliga a abrir cuatro
  * archivos para averiguarlo.
  */
-export function Resultado({ fila }: { fila: Fila }) {
+export function Resultado({
+  fila,
+  conConsulta,
+}: {
+  fila: Fila
+  /** Si no hay término buscado, no hay nada a lo que "caer": es el resumen y ya. */
+  conConsulta: boolean
+}) {
   return (
     <article className="border-b border-linea py-4 first:pt-0 last:border-0">
       <div className="flex items-baseline gap-2">
@@ -54,7 +61,7 @@ export function Resultado({ fila }: { fila: Fila }) {
 
       {fila.fragmento && (
         <p className="mt-2 text-sm leading-relaxed text-tinta-suave">
-          {fila.fragmento_es_resumen && (
+          {conConsulta && fila.fragmento_es_resumen && (
             <span className="mr-1.5 text-xs text-tinta-suave opacity-70">
               Del resumen:
             </span>

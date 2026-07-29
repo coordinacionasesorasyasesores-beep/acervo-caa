@@ -46,10 +46,21 @@ export function ArbolDeTemas({
             .filter((h) => h.parent_id === padre.id)
             .sort((a, b) => a.position - b.position)
 
+          // El catálogo tiene 27 temas y casi todos empiezan vacíos.
+          // Pintarlos todos empuja las facetas fuera de la pantalla —una
+          // pantalla de más de mil píxeles de temas apagados— así que los
+          // hijos salen cuando tienen contenido o cuando alguien está
+          // navegando por esa rama. Los siete padres siempre están: son la
+          // estructura del acervo y conviene poder aprendérsela.
+          const ramaViva =
+            (conteos.get(padre.id) ?? 0) > 0 ||
+            filtros.temas.includes(padre.id) ||
+            hijos.some((h) => filtros.temas.includes(h.id) || (conteos.get(h.id) ?? 0) > 0)
+
           return (
             <li key={padre.id}>
               <Rama tema={padre} conteos={conteos} filtros={filtros} nivel="padre" />
-              {hijos.length > 0 && (
+              {hijos.length > 0 && ramaViva && (
                 <ul className="mt-0.5 space-y-0.5 border-l border-linea pl-3">
                   {hijos.map((h) => (
                     <li key={h.id}>

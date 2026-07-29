@@ -124,13 +124,23 @@ function calcular(faceta: Faceta, filtros: Filtros) {
           pagina: 1,
         }),
       }
-    case 'status':
+    case 'status': {
+      // Sin nada elegido, la consulta muestra los publicados. La casilla
+      // tiene que verse marcada o el usuario lee "no hay filtro" cuando sí
+      // lo hay, y no entiende por qué no ve los archivados.
+      const implicito = filtros.estatus.length === 0
+      const actuales = implicito ? ['publicado'] : filtros.estatus
+
       return {
-        activo: filtros.estatus.includes(faceta.valor),
+        activo: actuales.includes(faceta.valor),
+        // Partir del implícito hace que marcar "Archivado" sume a los
+        // vigentes en vez de sustituirlos, que es lo que significa que las
+        // facetas sean acumulables.
         destino: urlCon(filtros, {
-          estatus: alternar(filtros.estatus, faceta.valor),
+          estatus: alternar(actuales, faceta.valor),
           pagina: 1,
         }),
       }
+    }
   }
 }

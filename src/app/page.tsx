@@ -44,7 +44,10 @@ export default async function ConsultaPage({
     }),
     supabase.rpc('search_facets', params),
     supabase.from('topics').select('*').order('position'),
-    supabase.rpc('topic_counts', { p_statuses: params.p_statuses }),
+    supabase.rpc('topic_counts', {
+      p_statuses: params.p_statuses,
+      p_query: params.p_query,
+    }),
   ])
 
   const filas = (resultados.data ?? []) as Fila[]
@@ -64,7 +67,10 @@ export default async function ConsultaPage({
   return (
     <Shell profile={profile}>
       <div className="grid gap-10 lg:grid-cols-[15rem_1fr]">
-        <aside className="space-y-7 lg:sticky lg:top-6 lg:self-start">
+        {/* La barra se queda fija y con su propio scroll: cuando el acervo
+            crezca y el árbol se estire, las facetas siguen alcanzables sin
+            recorrer toda la página. */}
+        <aside className="space-y-7 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto lg:pr-2">
           <ArbolDeTemas
             topics={(topics.data ?? []) as Topic[]}
             conteos={conteoPorTema}
@@ -126,7 +132,7 @@ export default async function ConsultaPage({
             <>
               <div>
                 {filas.map((fila) => (
-                  <Resultado key={fila.id} fila={fila} />
+                  <Resultado key={fila.id} fila={fila} conConsulta={Boolean(filtros.q)} />
                 ))}
               </div>
 

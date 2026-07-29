@@ -119,11 +119,29 @@ export function urlCon(f: Filtros, cambios: Partial<Filtros>): string {
   if (nuevo.usos.length) p.set('uso', nuevo.usos.join(','))
   if (nuevo.areas.length) p.set('area', nuevo.areas.join(','))
   if (nuevo.estatus.length) p.set('estatus', nuevo.estatus.join(','))
-  if (nuevo.orden === 'relevancia' && nuevo.q) p.set('orden', 'relevancia')
+  // Solo se escribe cuando se aparta del valor por omisión, que con texto
+  // es "relevancia". Escribir el otro caso dejaría URLs con ruido; no
+  // escribir este dejaba el botón de "ordenar por fecha" sin efecto.
+  if (nuevo.q && nuevo.orden === 'reciente') p.set('orden', 'reciente')
   if (cambios.pagina && cambios.pagina > 1) p.set('pagina', String(cambios.pagina))
 
   const query = p.toString()
   return query ? `/?${query}` : '/'
+}
+
+/**
+ * Quita del fragmento las marcas que el extractor puso para estructurar el
+ * texto. "## Diapositiva 2" ayuda a que el índice sepa dónde empieza cada
+ * lámina, pero en un resultado de búsqueda son dos gatos delante de una
+ * frase. Se limpia al mostrar, no al indexar: el texto guardado tiene que
+ * seguir pareciéndose al documento.
+ */
+function limpiarFragmento(texto: string): string {
+  return texto
+    .replace(/#{2,6}\s*/g, '')
+    .replace(/\s*\n+\s*/g, ' ')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim()
 }
 
 /** Alterna un valor dentro de una faceta: eso es "acumulable". */
@@ -154,7 +172,7 @@ export function hayFiltros(f: Filtros): boolean {
  * «» y se parte en React, que escapa por su cuenta.
  */
 export function trozosResaltados(texto: string): { texto: string; marcado: boolean }[] {
-  return texto
+  return limpiarFragmento(texto)
     .split(/(«[^»]*»)/)
     .filter(Boolean)
     .map((parte) =>
