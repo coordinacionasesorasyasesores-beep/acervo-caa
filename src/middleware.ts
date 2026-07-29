@@ -42,6 +42,13 @@ export async function middleware(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 
   if (!user && !isPublic) {
+    // A una ruta de API se le contesta, no se le redirige: un 307 hacia el
+    // login devuelve HTML con estatus de éxito, y el `fetch` del navegador
+    // lo toma por una respuesta buena hasta que revienta al parsear.
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Sin sesión.' }, { status: 401 })
+    }
+
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
