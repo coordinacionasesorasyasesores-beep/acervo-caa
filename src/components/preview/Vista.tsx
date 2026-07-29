@@ -30,6 +30,10 @@ const TextoPreview = dynamic(() => import('./TextoPreview').then((m) => m.TextoP
   ssr: false,
   loading: () => <Cargando>Cargando el texto…</Cargando>,
 })
+const PptxPreview = dynamic(() => import('./PptxPreview').then((m) => m.PptxPreview), {
+  ssr: false,
+  loading: () => <Cargando>Cargando las láminas…</Cargando>,
+})
 
 type Formato = 'pdf' | 'xlsx' | 'docx' | 'pptx' | null
 
@@ -50,12 +54,16 @@ export function Vista({
   filename,
   tieneTexto,
   pesoMb,
+  laminas,
 }: {
   versionId: string
   mime: string | null
   filename: string | null
   tieneTexto: boolean
   pesoMb: string
+  /** `page_count`: en un PPTX dice cuántas láminas tiene el archivo, y
+      comparado con las que dejaron texto revela cuántas son imágenes. */
+  laminas: number | null
 }) {
   const [abierto, setAbierto] = useState(false)
   const formato = formatoDe(mime, filename)
@@ -71,7 +79,7 @@ export function Vista({
         </span>
         <span className="mt-0.5 block text-xs text-tinta-suave">
           {formato === 'pptx'
-            ? 'Las presentaciones no se renderizan en esta versión; se muestra su texto.'
+            ? 'Se muestra el texto de cada lámina, no las láminas.'
             : `Se descarga ${pesoMb} MB para mostrarlo aquí.`}
         </span>
       </button>
@@ -87,10 +95,7 @@ export function Vista({
       return <DocxPreview versionId={versionId} />
     case 'pptx':
       return tieneTexto ? (
-        <TextoPreview
-          versionId={versionId}
-          nota="Texto extraído de la presentación. Las láminas que son imágenes no aparecen aquí."
-        />
+        <PptxPreview versionId={versionId} laminas={laminas} />
       ) : (
         <SinVista>Esta presentación no dejó texto que mostrar.</SinVista>
       )

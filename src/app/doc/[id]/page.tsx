@@ -145,6 +145,7 @@ export default async function FichaPage({
                 filename={vigente.filename}
                 tieneTexto={Boolean(vigente.text_key)}
                 pesoMb={mb(vigente.size_bytes)}
+                laminas={vigente.page_count}
               />
             ) : (
               <p className="rounded-lg border border-dashed border-linea bg-white px-6 py-10 text-center text-sm text-tinta-suave">
