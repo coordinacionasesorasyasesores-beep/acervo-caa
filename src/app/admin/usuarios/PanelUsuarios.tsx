@@ -5,7 +5,9 @@ import { ROLES, ROLE_LABEL, ROLE_PUEDE, type Role } from '@/lib/roles'
 import { BotonConfirmar } from '@/components/ui/BotonConfirmar'
 import {
   agregarALista,
+  asignarContrasena,
   cambiarRol,
+  crearCuenta,
   quitarDeLista,
   type Resultado,
 } from './acciones'
@@ -26,6 +28,18 @@ export function PanelUsuarios({
 }) {
   return (
     <div className="space-y-8">
+      <section>
+        <h2 className="mb-2 text-xs font-semibold tracking-wide text-tinta-suave uppercase">
+          Dar de alta a alguien
+        </h2>
+        <p className="mb-2 text-sm leading-relaxed text-tinta-suave">
+          Son dos pasos y en este orden: autoriza el correo en la lista de
+          abajo, y después créale la cuenta aquí. La contraseña se la
+          entregas en persona — no hay correo saliente que se la mande.
+        </p>
+        <NuevaCuenta />
+      </section>
+
       <section>
         <h2 className="mb-2 text-xs font-semibold tracking-wide text-tinta-suave uppercase">
           Personas registradas
@@ -96,8 +110,113 @@ function FilaPerfil({ perfil, soyYo }: { perfil: Perfil; soyYo: boolean }) {
         </form>
       )}
 
+      <NuevaContrasena id={perfil.id} />
+
       {estado.error && <span className="text-xs text-red-700">{estado.error}</span>}
     </li>
+  )
+}
+
+function NuevaContrasena({ id }: { id: string }) {
+  const [estado, asignar, asignando] = useActionState(asignarContrasena, inicial)
+  const [abierto, setAbierto] = useState(false)
+
+  if (!abierto) {
+    return (
+      <button
+        onClick={() => setAbierto(true)}
+        className="text-xs text-tinta-suave underline-offset-2 hover:text-tinta hover:underline"
+      >
+        Asignar contraseña
+      </button>
+    )
+  }
+
+  return (
+    <form
+      action={async (datos) => {
+        await asignar(datos)
+        setAbierto(false)
+      }}
+      className="flex items-center gap-1.5"
+    >
+      <input type="hidden" name="id" value={id} />
+      <input
+        name="password"
+        type="text"
+        required
+        minLength={12}
+        autoFocus
+        placeholder="mínimo 12 caracteres"
+        // En claro a propósito: quien la escribe tiene que poder leerla
+        // para dictarla, y la va a entregar en voz alta de todos modos.
+        className="w-52 rounded border border-linea px-2 py-1 text-xs outline-none focus:border-acento"
+      />
+      <button
+        disabled={asignando}
+        className="rounded bg-acento px-2 py-1 text-xs text-white disabled:opacity-50"
+      >
+        Asignar
+      </button>
+      <button
+        type="button"
+        onClick={() => setAbierto(false)}
+        className="text-xs text-tinta-suave hover:text-tinta"
+      >
+        Cancelar
+      </button>
+      {estado.error && <span className="text-xs text-red-700">{estado.error}</span>}
+    </form>
+  )
+}
+
+function NuevaCuenta() {
+  const [estado, crear, creando] = useActionState(crearCuenta, inicial)
+
+  return (
+    <form action={crear} className="rounded-lg border border-linea bg-white p-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="min-w-52 flex-1">
+          <span className="text-sm font-medium">Correo</span>
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="nombre@issste.gob.mx"
+            className="mt-1 w-full rounded border border-linea px-2.5 py-1.5 text-sm outline-none focus:border-acento"
+          />
+        </label>
+        <label className="min-w-40 flex-1">
+          <span className="text-sm font-medium">Nombre</span>
+          <input
+            name="full_name"
+            placeholder="Como debe aparecer en las fichas"
+            className="mt-1 w-full rounded border border-linea px-2.5 py-1.5 text-sm outline-none focus:border-acento"
+          />
+        </label>
+        <label className="min-w-52 flex-1">
+          <span className="text-sm font-medium">Contraseña</span>
+          <input
+            name="password"
+            type="text"
+            required
+            minLength={12}
+            placeholder="mínimo 12 caracteres"
+            className="mt-1 w-full rounded border border-linea px-2.5 py-1.5 text-sm outline-none focus:border-acento"
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={creando}
+          className="rounded bg-acento px-3.5 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {creando ? 'Creando…' : 'Crear cuenta'}
+        </button>
+      </div>
+
+      {estado.error && <p className="mt-2 text-sm text-red-700">{estado.error}</p>}
+      {estado.aviso && <p className="mt-2 text-sm text-tinta-suave">{estado.aviso}</p>}
+    </form>
   )
 }
 

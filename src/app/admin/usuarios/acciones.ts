@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Gestión de quién entra y con qué rol.
@@ -97,5 +98,133 @@ export async function quitarDeLista(
   return {
     error: null,
     aviso: 'Quitado de la lista. Si ya tenía cuenta, sigue entrando: para cerrarle la puerta hay que bajarle el rol.',
+  }
+}
+
+/**
+ * Comprueba que quien llama es administrador **antes** de tocar la llave
+ * de servicio.
+ *
+ * Las acciones de abajo usan el API de Auth con permisos totales, que se
+ * salta RLS por definición. Sin esta guarda, cualquiera que descubriera el
+ * nombre de la acción podría crear cuentas: las Server Actions son
+ * endpoints, aunque no lo parezcan al leer el código.
+ */
+async function exigirAdmin(): Promise<string | null> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return 'Sin sesión.'
+
+  const { data: perfil } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  return perfil?.role === 'admin' ? null : 'Solo un administrador puede hacer esto.'
+}
+
+/** Doce caracteres: se entrega en persona y se cambia después, no se teclea a diario. */
+function contrasenaValida(p: string): string | null {
+  if (p.length < 12) return 'La contraseña necesita al menos 12 caracteres.'
+  return null
+}
+
+/**
+ * Crea la cuenta de alguien que ya está en la lista de acceso.
+ *
+ * El orden importa y no es casual: primero autorizar el correo, después
+ * crear la cuenta. El trigger sobre `auth.users` lee `access_list` para
+ * decidir el rol, así que crear la cuenta antes de autorizar el correo
+ * falla — y falla bien, porque es la misma puerta para todos.
+ */
+export async function crearCuenta(
+  _previo: Resultado,
+  datos: FormData,
+): Promise<Resultado> {
+  const problema = await exigirAdmin()
+  if (problema) return { error: problema }
+
+  const email = String(datos.get('email') ?? '').trim().toLowerCase()
+  const password = String(datos.get('password') ?? '')
+  const nombre = String(datos.get('full_name') ?? '').trim()
+
+  if (!email.includes('@')) return { error: 'Ese correo no parece un correo.' }
+  const malaContrasena = contrasenaValida(password)
+  if (malaContrasena) return { error: malaContrasena }
+
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    // Sin correo saliente no hay a quién confirmarle nada: la cuenta nace
+    // confirmada porque la creó un administrador, que es la confirmación.
+    email_confirm: true,
+    user_metadata: nombre ? { full_name: nombre } : undefined,
+  })
+
+  if (error) {
+    if (/already been registered|already exists/i.test(error.message)) {
+      return { error: 'Ese correo ya tiene cuenta. Asígnale una contraseña nueva en su lugar.' }
+    }
+
+    // El trigger de la lista de acceso aborta el alta y Supabase devuelve
+    // el error sin mensaje: literalmente "{}". Comprobado. Cualquier fallo
+    // que no sea el duplicado se explica como lo que casi siempre es, y se
+    // añade el detalle crudo solo si lo hay, para no esconder lo demás.
+    const detalle = error.message && error.message !== '{}' ? ` (${error.message})` : ''
+    return {
+      error:
+        'No se pudo crear la cuenta. Lo más probable es que el correo no esté ' +
+        `en la lista de acceso: autorízalo abajo y vuelve a intentar.${detalle}`,
+    }
+  }
+
+  // El trigger crea el perfil con el rol de la lista; el nombre no lo sabe.
+  if (nombre) {
+    const supabase = await createClient()
+    const { data: usuarios } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
+    const creado = usuarios?.users?.find((u) => u.email === email)
+    if (creado) {
+      await supabase.from('profiles').update({ full_name: nombre }).eq('id', creado.id)
+    }
+  }
+
+  revalidatePath('/admin/usuarios')
+  return {
+    error: null,
+    aviso: `Cuenta creada para ${email}. Entrégale la contraseña en persona: no hay correo que se la mande.`,
+  }
+}
+
+/**
+ * Asigna una contraseña nueva. Es el "olvidé mi contraseña" del sistema:
+ * sin correo saliente no hay enlace de recuperación que mandar, así que la
+ * recuperación es que un administrador asigne otra y la entregue.
+ */
+export async function asignarContrasena(
+  _previo: Resultado,
+  datos: FormData,
+): Promise<Resultado> {
+  const problema = await exigirAdmin()
+  if (problema) return { error: problema }
+
+  const id = String(datos.get('id') ?? '')
+  const password = String(datos.get('password') ?? '')
+  if (!id) return { error: 'Falta la persona.' }
+
+  const malaContrasena = contrasenaValida(password)
+  if (malaContrasena) return { error: malaContrasena }
+
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.updateUserById(id, { password })
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/usuarios')
+  return {
+    error: null,
+    aviso: 'Contraseña asignada. Entrégasela en persona; sus sesiones abiertas siguen activas.',
   }
 }

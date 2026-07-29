@@ -6,7 +6,7 @@ mantenerlo en la raíz del repo y actualizarlo cuando una decisión cambie.
 **Estado:** sprints 1, 2, 4, 5 y 6 terminados y verificados en local; sprint 1 además
 desplegado en `repositorio-caa`. Sprint 3 escrito pero **sin una sola llamada real a
 la API** — falta `ANTHROPIC_API_KEY` y quedó pospuesto a propósito.
-**Última actualización:** 29 de julio de 2026 · rev. 8 (sprint 6 terminado).
+**Última actualización:** 29 de julio de 2026 · rev. 9 (Vercel en vez de Cloudflare; entrada por contraseña).
 
 **Proyecto de Supabase:** `repositorio-caa` · ref `mmqqtpixmjbdaxmvksoz` · us-east-2 ·
 organización ISSSTE-FREE_PROJECT (plan gratuito).
@@ -48,13 +48,14 @@ técnicamente inviable durante la implementación.
 | Capa | Elección | Notas |
 |---|---|---|
 | Frontend | Next.js (App Router) + TypeScript + Tailwind | |
-| Hosting app | Cloudflare Pages / Workers | Adaptador OpenNext para Cloudflare |
+| Hosting app | **Vercel** | Cuenta Pro existente; sin costo adicional |
 | Base de datos | Supabase (plan gratuito, organización nueva) | Postgres + Auth + RLS |
-| Archivos | Cloudflare R2 | 10 GB gratis, sin cargo por egress |
-| Puerta de acceso | Cloudflare Access | Lista de correos institucionales |
+| Archivos | **Supabase Storage** (API S3) | 1 GB y 5 GB de egress al mes. Migrar a R2 es cambiar cuatro variables |
+| Puerta de acceso | **`access_list` en la base** | Un trigger sobre `auth.users` aborta el alta de quien no esté |
 | Extracción de texto | En el navegador, al subir | Sin worker de servidor |
 | Metadatos automáticos | Claude API (`claude-haiku-4-5`) | Ruta de servidor |
-| Respaldo | GitHub Actions → R2, diario | El plan gratuito no incluye backups |
+| Entrada | **Correo y contraseña**, cuentas creadas por un admin | Sin SMTP no hay código al correo |
+| Respaldo | GitHub Actions → artefacto, diario | El plan gratuito no incluye backups. Exige repo privado |
 
 ### Por qué el texto se extrae en el navegador
 
@@ -66,10 +67,36 @@ Consecuencia aceptada: **no hay previews renderizados de PowerPoint** en la v1
 (queda ficha + descarga) y **los PDF escaneados no entran al buscador** hasta que
 se agregue OCR. Ambas cosas están en el roadmap, no en F1.
 
+### Por qué se cambió de Cloudflare a Vercel (rev. 9)
+
+El diseño original era Cloudflare: Workers para la app, R2 para los archivos
+y Access como reja. Se cambió por una razón sencilla —**el proyecto no tiene
+presupuesto y ya existe una cuenta Pro de Vercel**— y una segunda que hizo el
+cambio barato: `src/lib/r2.ts` firma contra un endpoint S3 genérico, y todo el
+desarrollo se hizo contra el API S3 de Supabase Storage. No había una sola línea
+atada a R2.
+
+Lo que se perdió, dicho sin adornos:
+
+- **El egress ilimitado de R2.** Ahora son 5 GB al mes compartidos con la base.
+  Con 600 MB de acervo son unas ocho recorridas completas al mes. Es el límite
+  que se toca primero.
+- **10 GB de almacenamiento, ahora 1 GB.** Con 600 MB de arranque el margen es
+  de 400 MB, y nada se borra nunca: cada versión suma.
+- **Cloudflare Access.** Dejó de ser indispensable cuando se descubrió que no
+  cubría el API de Supabase y se metió la lista de correos en la base. Esa es la
+  puerta que de verdad cierra; Access era el candado del estacionamiento.
+  Efecto secundario bueno: se firma una vez en lugar de dos.
+
+Si cualquiera de los dos límites aprieta, el siguiente escalón de Supabase son
+$25 USD al mes. Volver a R2 —10 GB y egress gratis, con tarjeta registrada— es
+cambiar cuatro variables de entorno y sale más barato.
+
 ### Límites del plan gratuito a vigilar
 
-- Supabase: 500 MB de base de datos, 5 GB de egress, 2 proyectos activos por organización.
-- R2: 10 GB de almacenamiento; sin cargo por egress.
+- Supabase: 500 MB de base, **1 GB de archivos**, 5 GB de egress, 2 proyectos activos.
+- El proyecto **se pausa a los 7 días sin actividad** y hay que despertarlo desde
+  el panel. Ya pasó una vez con `hub-caa`.
 - Al rebasar un límite, Supabase avisa al 80% y después de un periodo de gracia
   puede pasar a solo-lectura o bloquear subidas.
 

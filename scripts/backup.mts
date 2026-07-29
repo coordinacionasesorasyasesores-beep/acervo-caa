@@ -1,31 +1,34 @@
 /**
- * Respaldo diario de la base a R2.
+ * Respaldo diario de la base.
  *
  * El plan gratuito de Supabase no incluye respaldos. Sin esto, un borrado
  * accidental o un problema del proveedor se lleva el acervo entero, y la
  * promesa del proyecto —"que nunca se pierda cuál es la versión buena"—
  * depende de que la base siga ahí.
  *
- * Los archivos no se respaldan aquí: ya viven en R2, que es el respaldo.
- * Lo que se copia es la base, que es lo único que no tiene otra copia.
+ * El volcado se deja en disco y GitHub Actions lo guarda como artefacto.
+ * No se sube al mismo Supabase que se está respaldando: una copia en el
+ * mismo disco que el original no es una copia, es el mismo archivo dos
+ * veces. El artefacto vive fuera, y el repositorio es privado.
+ *
+ * Los archivos no se respaldan aquí, solo la base. Es una decisión
+ * asumida y conviene tenerla presente: si se pierde el bucket, se pierden
+ * los archivos. La base guarda de qué eran y quién los subió.
  *
  *   npx tsx scripts/backup.mts
  *
  * Variables necesarias:
  *   SUPABASE_DB_URL   cadena de conexión, **por el Session Pooler**
- *   R2_ENDPOINT, R2_BUCKET, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
- *   RESPALDO_DIAS     cuántos conservar (por omisión 30)
+ *   RESPALDO_SALIDA   carpeta donde dejar el volcado (por omisión ./respaldos)
  *   PG_DUMP           binario alterno, para probar en local
  */
 import { execFileSync } from 'node:child_process'
 import { gzipSync } from 'node:zlib'
-import { readFileSync, rmSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { borrarObjeto, listarObjetos, subirDesdeServidor } from '../src/lib/r2.ts'
 
-const PREFIJO = 'respaldos/'
-const DIAS = Number(process.env.RESPALDO_DIAS ?? 30)
+const SALIDA = process.env.RESPALDO_SALIDA ?? './respaldos'
 
 function requerido(nombre: string): string {
   const v = process.env[nombre]
@@ -89,38 +92,15 @@ try {
 const crudo = readFileSync(archivo)
 rmSync(archivo, { force: true })
 
-// Un volcado SQL es texto repetitivo: comprime a una fracción, y en R2 se
-// paga por lo que se guarda.
+// Un volcado SQL es texto repetitivo: comprime a una fracción, y el
+// artefacto de GitHub tiene cupo.
 const comprimido = gzipSync(crudo, { level: 9 })
-const clave = `${PREFIJO}acervo-${sello}.sql.gz`
+
+mkdirSync(SALIDA, { recursive: true })
+const destino = join(SALIDA, `acervo-${sello}.sql.gz`)
+writeFileSync(destino, comprimido)
 
 console.log(
-  `Subiendo ${clave} (${(comprimido.length / 1024 / 1024).toFixed(2)} MB, ` +
-    `de ${(crudo.length / 1024 / 1024).toFixed(2)} MB en crudo)…`,
-)
-
-await subirDesdeServidor(
-  clave,
-  comprimido.buffer.slice(
-    comprimido.byteOffset,
-    comprimido.byteOffset + comprimido.byteLength,
-  ) as ArrayBuffer,
-  'application/gzip',
-)
-
-// ── Purga ────────────────────────────────────────────────────────
-// Se conservan los últimos N. Sin purga, el respaldo diario se come el
-// espacio gratuito de R2 y entonces deja de haber respaldos justo cuando
-// el acervo es más grande.
-const todos = (await listarObjetos(PREFIJO)).sort()
-const sobran = todos.slice(0, Math.max(0, todos.length - DIAS))
-
-for (const viejo of sobran) {
-  await borrarObjeto(viejo)
-  console.log(`Purgado ${viejo}`)
-}
-
-console.log(
-  `Listo. ${todos.length - sobran.length} respaldos en R2 ` +
-    `(se conservan ${DIAS} días).`,
+  `Listo: ${destino} (${(comprimido.length / 1024 / 1024).toFixed(2)} MB, ` +
+    `de ${(crudo.length / 1024 / 1024).toFixed(2)} MB en crudo).`,
 )

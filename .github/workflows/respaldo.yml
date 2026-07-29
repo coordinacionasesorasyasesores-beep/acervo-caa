@@ -3,6 +3,11 @@ name: Respaldo diario de la base
 # El plan gratuito de Supabase no incluye respaldos. Este workflow es el
 # único que hay, así que conviene que falle ruidosamente: si deja de correr
 # sin que nadie lo note, el respaldo no existe pero todos creen que sí.
+#
+# El volcado se guarda como artefacto de la ejecución. Eso solo es seguro
+# con el repositorio en privado: contiene los títulos, los resúmenes, los
+# correos autorizados y 30 KB del contenido de cada documento. En un repo
+# público, cualquiera podría descargarlo.
 on:
   schedule:
     # 09:00 UTC = 03:00 en el centro de México. Fuera de horario de trabajo
@@ -36,15 +41,21 @@ jobs:
           sudo apt-get install -y --no-install-recommends postgresql-client-17
           echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
 
-      - name: Respaldar
+      - name: Volcar la base
         env:
           # Del Session Pooler, no de la conexión directa: los runners de
           # GitHub no tienen IPv6 (§10 del documento).
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_REGION: auto
-          RESPALDO_DIAS: '30'
+          RESPALDO_SALIDA: respaldos
         run: npx tsx scripts/backup.mts
+
+      - name: Guardar el respaldo
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-${{ github.run_id }}
+          path: respaldos/*.sql.gz
+          # Noventa días es el máximo de GitHub y es más que suficiente:
+          # si un problema no se detectó en tres meses, el respaldo de hace
+          # tres meses ya no es el que se quiere restaurar.
+          retention-days: 90
+          if-no-files-found: error
