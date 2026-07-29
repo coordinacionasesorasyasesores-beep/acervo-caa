@@ -70,11 +70,14 @@ body {
 }
 
 /* El foco visible no es opcional: hay gente que navega con teclado y el
-   anillo por omisión del navegador desaparece contra el verde profundo. */
+   anillo por omisión del navegador desaparece contra el verde profundo.
+   Sin `border-radius` a propósito: ponerlo aquí no redondea el anillo, le
+   cambia el radio **al elemento** mientras está enfocado, y el campo de
+   la portada pasaba de redondeado a casi cuadrado al recibir el foco. Los
+   navegadores ya dibujan el contorno siguiendo el radio de cada elemento. */
 :focus-visible {
   outline: 2px solid var(--color-oro);
   outline-offset: 2px;
-  border-radius: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

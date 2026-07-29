@@ -13,3 +13,5 @@ supabase/.branches/
 .open-next/
 .wrangler/
 respaldos/
+.vercel
+.env*
