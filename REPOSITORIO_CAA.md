@@ -3,8 +3,10 @@
 Documento maestro del proyecto. Sirve como contexto permanente para Claude Code:
 mantenerlo en la raíz del repo y actualizarlo cuando una decisión cambie.
 
-**Estado:** sprint 1 desplegado en `repositorio-caa`; sprint 2 terminado y verificado en local contra archivos reales.
-**Última actualización:** 29 de julio de 2026 · rev. 4 (hallazgos de la verificación del sprint 2).
+**Estado:** sprints 1 y 2 terminados y verificados en local contra archivos reales;
+sprint 1 además desplegado en `repositorio-caa`. Sprint 3 escrito pero **sin una sola
+llamada real a la API** — falta `ANTHROPIC_API_KEY` y quedó pospuesto a propósito.
+**Última actualización:** 29 de julio de 2026 · rev. 5 (sprint 3 escrito y pospuesto).
 
 **Proyecto de Supabase:** `repositorio-caa` · ref `mmqqtpixmjbdaxmvksoz` · us-east-2 ·
 organización ISSSTE-FREE_PROJECT (plan gratuito).
@@ -575,12 +577,21 @@ No implementar, aunque el esquema los contemple:
 | Sprint | Contenido |
 |---|---|
 | 1 | ✅ Migraciones, catálogos sembrados, auth, roles, RLS, layout base |
-| 2 | Subida: dropzone, extracción en cliente, R2 con URL firmada, guardado |
-| 3 | Metadatos con Claude API y formulario de confirmación |
+| 2 | ✅ Subida: dropzone, extracción en cliente, R2 con URL firmada, guardado |
+| 3 | ⏸ Metadatos con Claude API y formulario de confirmación — código escrito, sin probar |
 | 4 | Consulta: buscador FTS, árbol de temas, facetas, fragmentos |
 | 5 | Ficha: previews PDF / Excel / Word, versiones, descarga, bitácora |
 | 6 | Administración: temas, usuarios, archivado, promoción de datasets |
 | 7 | Respaldo automatizado, despliegue en Cloudflare, **carga inicial real** |
+
+**El sprint 3 está escrito pero pospuesto.** La ruta `/api/metadata`, el prompt y el
+formulario con la marca de "sugerido" existen y compilan, pero no se ha ejecutado ni
+una llamada real: falta la llave de la API y todavía no está decidido cuánto se va a
+usar Claude en el proyecto. Nada de esto bloquea nada — sin llave configurada la ruta
+responde con un aviso y los metadatos se llenan a mano, que es justo lo que pide §5.1.
+Antes de darlo por bueno hay que correr `npx tsx scripts/metadatos.mts` contra archivos
+reales y afinar el prompt con lo que salga. Mientras tanto, el orden natural es seguir
+con el sprint 4.
 
 **El sprint 7 no cierra con una carga de prueba, sino con contenido de verdad.** Un
 buscador vacío no se usa, y lo que no se usa la primera semana no se usa nunca. Van
