@@ -3,10 +3,10 @@
 Documento maestro del proyecto. Sirve como contexto permanente para Claude Code:
 mantenerlo en la raíz del repo y actualizarlo cuando una decisión cambie.
 
-**Estado:** sprints 1, 2, 4 y 5 terminados y verificados en local; sprint 1 además
+**Estado:** sprints 1, 2, 4, 5 y 6 terminados y verificados en local; sprint 1 además
 desplegado en `repositorio-caa`. Sprint 3 escrito pero **sin una sola llamada real a
 la API** — falta `ANTHROPIC_API_KEY` y quedó pospuesto a propósito.
-**Última actualización:** 29 de julio de 2026 · rev. 7 (sprint 5 terminado).
+**Última actualización:** 29 de julio de 2026 · rev. 8 (sprint 6 terminado).
 
 **Proyecto de Supabase:** `repositorio-caa` · ref `mmqqtpixmjbdaxmvksoz` · us-east-2 ·
 organización ISSSTE-FREE_PROJECT (plan gratuito).
@@ -581,7 +581,7 @@ No implementar, aunque el esquema los contemple:
 | 3 | ⏸ Metadatos con Claude API y formulario de confirmación — código escrito, sin probar |
 | 4 | ✅ Consulta: buscador FTS, árbol de temas, facetas, fragmentos |
 | 5 | ✅ Ficha: previews PDF / Excel / Word, versiones, descarga, bitácora |
-| 6 | Administración: temas, usuarios, archivado, promoción de datasets |
+| 6 | ✅ Administración: temas, usuarios, archivado, promoción de datasets |
 | 7 | Respaldo automatizado, despliegue en Cloudflare, **carga inicial real** |
 
 **El sprint 3 está escrito pero pospuesto.** La ruta `/api/metadata`, el prompt y el
@@ -644,6 +644,16 @@ implementación y que cuestan horas si se descubren sin aviso.
 - **La versión de Next la manda OpenNext.** El adaptador de Cloudflare solo soporta
   `>=15.5.21 <16 || >=16.2.11`; las versiones intermedias no. Antes de actualizar
   Next hay que revisar el rango del adaptador, no al revés.
+- **Un componente de cliente no puede importar de `lib/auth.ts`.** Ese módulo lee
+  cookies con `next/headers`, así que basta importar de él una constante inocente
+  —el rótulo de un rol— para arrastrar código de servidor al bundle del navegador y
+  romper la página entera. El error habla de `next/headers` y del directorio
+  `pages/`, no de la constante que uno quería, así que cuesta un rato ver de dónde
+  sale. Lo que es común a cliente y servidor vive en `lib/roles.ts`.
+- **`useActionState` no propaga el `name`/`value` del botón que envía.** Dos botones
+  en el mismo formulario, cada uno con su valor, dejan la acción sin dato y sin
+  error: el clic simplemente no hace nada. Un formulario por botón, con el valor en
+  un campo oculto.
 - **`next build` y `next dev` se pisan.** Los dos escriben en el mismo `.next`, así
   que compilar para producción con el servidor de desarrollo encendido deja la
   pantalla sin estilos y con los chunks rotos. No se rompe nada del código —los

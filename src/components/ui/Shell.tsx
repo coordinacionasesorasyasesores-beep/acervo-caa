@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ROLE_LABEL, type SessionProfile } from '@/lib/auth'
+import type { SessionProfile } from '@/lib/auth'
+import { ROLE_LABEL } from '@/lib/roles'
 import { signOut } from '@/app/login/actions'
 
 /** Marco común de las pantallas con sesión: cabecera, navegación, pie. */

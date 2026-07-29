@@ -1,7 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import type { Role } from '@/lib/roles'
 
-export type Role = 'lector' | 'cargador' | 'admin'
+// Se re-exportan para no romper lo que ya los importaba de aquí; la
+// definición vive en `roles.ts`, que no toca nada de servidor.
+export { ROLE_LABEL, ROLES } from '@/lib/roles'
+export type { Role } from '@/lib/roles'
 
 export type SessionProfile = {
   id: string
@@ -51,8 +55,3 @@ export async function requireRole(...roles: Role[]): Promise<SessionProfile> {
   return profile
 }
 
-export const ROLE_LABEL: Record<Role, string> = {
-  lector: 'Lector',
-  cargador: 'Cargador',
-  admin: 'Administrador',
-}
