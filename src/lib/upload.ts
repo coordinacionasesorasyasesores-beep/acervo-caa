@@ -26,10 +26,14 @@ export type Metadatos = {
 export type Etapa =
   | 'leyendo'
   | 'subiendo'
-  | 'listo'      // subido, esperando que el usuario complete los datos
+  | 'proponiendo' // subido; Claude está leyendo el texto
+  | 'listo'       // subido, esperando que el usuario complete los datos
   | 'guardando'
   | 'guardado'
   | 'error'
+
+/** Los campos que propuso Claude y el usuario todavía no ha tocado. */
+export type CampoSugerido = keyof Metadatos
 
 export type ArchivoEnProceso = {
   id: string
@@ -44,6 +48,8 @@ export type ArchivoEnProceso = {
   error: string | null
   documentoId: string | null
   metadatos: Metadatos
+  sugeridos: CampoSugerido[]
+  avisoMetadatos: string | null
 }
 
 export function metadatosVacios(archivo: File): Metadatos {
@@ -152,18 +158,82 @@ export async function procesarArchivo(
       textKey = t.storageKey
     }
 
-    actualizar({
-      etapa: 'listo',
-      progreso: 100,
-      storageKey: doc.storageKey,
-      textKey,
-    })
+    actualizar({ etapa: 'proponiendo', progreso: 100, storageKey: doc.storageKey, textKey })
+
+    // Los datos se proponen antes de enseñar el formulario, no después:
+    // así el usuario ve los campos ya llenos en lugar de verlos cambiar
+    // bajo el cursor mientras escribe. Nada de esto puede impedir que
+    // guarde —si falla, el formulario sale vacío y ya.
+    const { sugeridos, aviso } = await proponer(entrada, texto.texto, actualizar)
+
+    actualizar({ etapa: 'listo', sugeridos, avisoMetadatos: aviso })
   } catch (error) {
     actualizar({
       etapa: 'error',
       error: error instanceof Error ? error.message : 'Falló la subida.',
     })
   }
+}
+
+type Sugerencia = Partial<Record<CampoSugerido, unknown>>
+
+/**
+ * Pide los metadatos a `/api/metadata` y los mezcla con lo que ya hay.
+ *
+ * Solo llena huecos. El nombre del archivo y el año en curso son marcadores
+ * de posición y sí se reemplazan; el responsable no se toca nunca, porque
+ * lo puso el propio usuario al arrastrar el archivo.
+ */
+async function proponer(
+  entrada: ArchivoEnProceso,
+  texto: string,
+  actualizar: (cambios: Partial<ArchivoEnProceso>) => void,
+): Promise<{ sugeridos: CampoSugerido[]; aviso: string | null }> {
+  if (!texto) {
+    return { sugeridos: [], aviso: null }
+  }
+
+  let datos: { sugerencia: Sugerencia | null; aviso: string | null }
+  try {
+    const res = await fetch('/api/metadata', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texto }),
+    })
+    if (!res.ok) throw new Error(String(res.status))
+    datos = await res.json()
+  } catch {
+    return {
+      sugeridos: [],
+      aviso: 'No se pudieron proponer los datos. Llénalos a mano y guarda normal.',
+    }
+  }
+
+  const s = datos.sugerencia
+  if (!s) return { sugeridos: [], aviso: datos.aviso }
+
+  const m = { ...entrada.metadatos }
+  const sugeridos: CampoSugerido[] = []
+
+  const poner = <K extends CampoSugerido>(campo: K, valor: Metadatos[K] | null) => {
+    if (valor === null || valor === undefined) return
+    if (Array.isArray(valor) && valor.length === 0) return
+    m[campo] = valor
+    sugeridos.push(campo)
+  }
+
+  poner('title', s.title as string | null)
+  poner('year', s.year as number | null)
+  poner('summary', s.summary as string | null)
+  poner('area', s.area as string | null)
+  poner('doc_type_id', s.doc_type_id as number | null)
+  poner('doc_use_id', s.doc_use_id as number | null)
+  poner('primary_topic_id', s.primary_topic_id as number | null)
+  poner('topic_ids', s.topic_ids as number[] | null)
+  poner('tags', s.tags as string[] | null)
+
+  actualizar({ metadatos: m })
+  return { sugeridos, aviso: datos.aviso }
 }
 
 /** Alta como documento nuevo. Una sola transacción del lado de Postgres. */

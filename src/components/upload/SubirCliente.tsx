@@ -57,6 +57,8 @@ export function SubirCliente({
         error: problema,
         documentoId: null,
         metadatos,
+        sugeridos: [],
+        avisoMetadatos: null,
       }
     })
 

@@ -11,9 +11,11 @@
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff",
     "prueba:extraccion": "tsx scripts/extraccion.mts",
-    "prueba:humo": "tsx scripts/humo-subida.mts"
+    "prueba:humo": "tsx scripts/humo-subida.mts",
+    "prueba:metadatos": "tsx scripts/metadatos.mts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.47.10",
     "aws4fetch": "^1.0.20",

@@ -89,18 +89,24 @@ export function FichaArchivo({
         )}
       </div>
 
-      {(entrada.etapa === 'leyendo' || entrada.etapa === 'subiendo') && (
+      {(entrada.etapa === 'leyendo' ||
+        entrada.etapa === 'subiendo' ||
+        entrada.etapa === 'proponiendo') && (
         <div className="px-4 py-3">
           <div className="h-1.5 overflow-hidden rounded-full bg-papel">
             <div
-              className="h-full bg-acento transition-[width] duration-200"
+              className={`h-full bg-acento transition-[width] duration-200 ${
+                entrada.etapa === 'proponiendo' ? 'animate-pulse' : ''
+              }`}
               style={{ width: `${entrada.etapa === 'leyendo' ? 8 : entrada.progreso}%` }}
             />
           </div>
           <p className="mt-1.5 text-xs text-tinta-suave">
             {entrada.etapa === 'leyendo'
               ? 'Leyendo el contenido en tu navegador…'
-              : `Subiendo… ${entrada.progreso}%`}
+              : entrada.etapa === 'subiendo'
+                ? `Subiendo… ${entrada.progreso}%`
+                : 'Proponiendo los datos a partir del contenido…'}
           </p>
         </div>
       )}
@@ -171,12 +177,31 @@ export function FichaArchivo({
           </div>
 
           {modo === 'nuevo' ? (
-            <FormularioMetadatos
-              valor={entrada.metadatos}
-              onCambio={(m) => actualizar({ metadatos: m })}
-              catalogos={catalogos}
-              deshabilitado={entrada.etapa === 'guardando'}
-            />
+            <>
+              {entrada.avisoMetadatos && (
+                <p className="text-xs leading-relaxed text-tinta-suave">
+                  {entrada.avisoMetadatos}
+                </p>
+              )}
+              {entrada.sugeridos.length > 0 && (
+                <p className="text-xs leading-relaxed text-tinta-suave">
+                  Los campos marcados los propuso Claude leyendo el documento.
+                  Revísalos: la marca desaparece en cuanto corriges uno.
+                </p>
+              )}
+              <FormularioMetadatos
+                valor={entrada.metadatos}
+                onCambio={(m, campoTocado) =>
+                  actualizar({
+                    metadatos: m,
+                    sugeridos: entrada.sugeridos.filter((c) => c !== campoTocado),
+                  })
+                }
+                catalogos={catalogos}
+                sugeridos={entrada.sugeridos}
+                deshabilitado={entrada.etapa === 'guardando'}
+              />
+            </>
           ) : (
             <div className="space-y-3">
               <BuscadorDocumentos
@@ -222,6 +247,7 @@ function Estado({ etapa }: { etapa: ArchivoEnProceso['etapa'] }) {
   const mapa: Record<ArchivoEnProceso['etapa'], [string, string]> = {
     leyendo: ['Leyendo', 'text-tinta-suave'],
     subiendo: ['Subiendo', 'text-tinta-suave'],
+    proponiendo: ['Proponiendo datos', 'text-tinta-suave'],
     listo: ['Falta guardar', 'text-acento'],
     guardando: ['Guardando', 'text-tinta-suave'],
     guardado: ['Guardado', 'text-green-700'],

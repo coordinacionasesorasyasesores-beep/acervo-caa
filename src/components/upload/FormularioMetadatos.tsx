@@ -14,18 +14,32 @@ export function FormularioMetadatos({
   valor,
   onCambio,
   catalogos,
+  sugeridos = [],
   deshabilitado,
 }: {
   valor: Metadatos
-  onCambio: (m: Metadatos) => void
+  onCambio: (m: Metadatos, campoTocado: keyof Metadatos) => void
   catalogos: Catalogos
+  /** Campos que propuso Claude y el usuario aún no ha corregido. */
+  sugeridos?: (keyof Metadatos)[]
   deshabilitado?: boolean
 }) {
   const [abierto, setAbierto] = useState(false)
   const [etiquetaEnCurso, setEtiquetaEnCurso] = useState('')
 
+  // Cualquier edición retira la marca de sugerido de ese campo: a partir
+  // de ahí el dato es del usuario y ya no hay nada que revisar.
   const set = <K extends keyof Metadatos>(k: K, v: Metadatos[K]) =>
-    onCambio({ ...valor, [k]: v })
+    onCambio({ ...valor, [k]: v }, k)
+
+  const sug = (k: keyof Metadatos) => sugeridos.includes(k)
+
+  // Con algo sugerido, la sección plegada trae contenido que conviene ver.
+  const [plegadoResuelto, setPlegadoResuelto] = useState(false)
+  const opcionalesAbierto =
+    abierto ||
+    (!plegadoResuelto &&
+      (sug('summary') || sug('area') || sug('doc_use_id') || sug('topic_ids') || sug('tags')))
 
   const temas = temasEnOrden(catalogos.topics)
   const anioActual = new Date().getFullYear()
@@ -38,7 +52,7 @@ export function FormularioMetadatos({
 
   return (
     <fieldset disabled={deshabilitado} className="space-y-4 disabled:opacity-60">
-      <Campo etiqueta="Título" requerido>
+      <Campo etiqueta="Título" requerido sugerido={sug('title')}>
         <input
           value={valor.title}
           onChange={(e) => set('title', e.target.value)}
@@ -47,7 +61,7 @@ export function FormularioMetadatos({
       </Campo>
 
       <div className="grid grid-cols-2 gap-4">
-        <Campo etiqueta="Tipo documental" requerido>
+        <Campo etiqueta="Tipo documental" requerido sugerido={sug('doc_type_id')}>
           <select
             value={valor.doc_type_id}
             onChange={(e) => set('doc_type_id', Number(e.target.value) || '')}
@@ -62,7 +76,7 @@ export function FormularioMetadatos({
           </select>
         </Campo>
 
-        <Campo etiqueta="Año" requerido>
+        <Campo etiqueta="Año" requerido sugerido={sug('year')}>
           <input
             type="number"
             min={1980}
@@ -74,7 +88,12 @@ export function FormularioMetadatos({
         </Campo>
       </div>
 
-      <Campo etiqueta="Tema principal" requerido pista="¿De qué habla, no qué formato tiene?">
+      <Campo
+        etiqueta="Tema principal"
+        requerido
+        sugerido={sug('primary_topic_id')}
+        pista="¿De qué habla, no qué formato tiene?"
+      >
         <select
           value={valor.primary_topic_id}
           onChange={(e) => set('primary_topic_id', Number(e.target.value) || '')}
@@ -110,15 +129,18 @@ export function FormularioMetadatos({
 
       <button
         type="button"
-        onClick={() => setAbierto(!abierto)}
+        onClick={() => {
+          setPlegadoResuelto(true)
+          setAbierto(!opcionalesAbierto)
+        }}
         className="text-xs text-acento underline-offset-2 hover:underline"
       >
-        {abierto ? 'Ocultar' : 'Agregar'} resumen, temas secundarios y etiquetas
+        {opcionalesAbierto ? 'Ocultar' : 'Agregar'} resumen, temas secundarios y etiquetas
       </button>
 
-      {abierto && (
+      {opcionalesAbierto && (
         <div className="space-y-4 border-l-2 border-linea pl-4">
-          <Campo etiqueta="Resumen">
+          <Campo etiqueta="Resumen" sugerido={sug('summary')}>
             <textarea
               rows={3}
               value={valor.summary}
@@ -128,14 +150,14 @@ export function FormularioMetadatos({
           </Campo>
 
           <div className="grid grid-cols-2 gap-4">
-            <Campo etiqueta="Área">
+            <Campo etiqueta="Área" sugerido={sug('area')}>
               <input
                 value={valor.area}
                 onChange={(e) => set('area', e.target.value)}
                 className={entrada}
               />
             </Campo>
-            <Campo etiqueta="Uso">
+            <Campo etiqueta="Uso" sugerido={sug('doc_use_id')}>
               <select
                 value={valor.doc_use_id}
                 onChange={(e) => set('doc_use_id', Number(e.target.value) || '')}
@@ -153,6 +175,7 @@ export function FormularioMetadatos({
 
           <Campo
             etiqueta="Temas secundarios"
+            sugerido={sug('topic_ids')}
             pista="Un concentrado puede hablar de salud, obra y presupuesto a la vez."
           >
             <div className="mt-1 max-h-40 space-y-0.5 overflow-y-auto rounded border border-linea p-2">
@@ -181,7 +204,11 @@ export function FormularioMetadatos({
             </div>
           </Campo>
 
-          <Campo etiqueta="Etiquetas" pista="Libres. Lo más fino que no cabe en un tema.">
+          <Campo
+            etiqueta="Etiquetas"
+            sugerido={sug('tags')}
+            pista="Libres. Lo más fino que no cabe en un tema."
+          >
             <div className="mt-1 flex flex-wrap gap-1.5">
               {valor.tags.map((t) => (
                 <span
@@ -227,11 +254,13 @@ function Campo({
   etiqueta,
   requerido,
   pista,
+  sugerido,
   children,
 }: {
   etiqueta: string
   requerido?: boolean
   pista?: string
+  sugerido?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -239,6 +268,11 @@ function Campo({
       <span className="text-sm font-medium">
         {etiqueta}
         {requerido && <span className="ml-0.5 text-acento">*</span>}
+        {sugerido && (
+          <span className="ml-2 rounded bg-acento-suave px-1.5 py-0.5 align-middle text-[10px] font-normal uppercase tracking-wide text-acento">
+            sugerido
+          </span>
+        )}
       </span>
       {pista && <span className="mt-0.5 block text-xs text-tinta-suave">{pista}</span>}
       <div className="mt-1">{children}</div>
