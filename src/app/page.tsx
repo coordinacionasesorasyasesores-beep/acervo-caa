@@ -84,15 +84,18 @@ export default async function ConsultaPage({
   return (
     <Shell profile={profile} busqueda={<Buscador filtros={filtros} />}>
       <div className="grid gap-10 lg:grid-cols-[15rem_1fr]">
-        {/* La barra se queda fija y con su propio scroll: cuando el acervo
-            crezca y el árbol se estire, las facetas siguen alcanzables sin
-            recorrer toda la página. */}
-        <aside className="space-y-7 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto lg:pr-2">
+        {/* En pantalla angosta los resultados van primero. Apilada arriba,
+            la barra obliga a pasar veintisiete temas y cinco facetas antes
+            de ver un solo resultado, que es a lo que vino la persona.
+            En escritorio vuelve a la izquierda, fija y con su propio
+            scroll: cuando el acervo crezca y el árbol se estire, las
+            facetas siguen alcanzables sin recorrer toda la página. */}
+        <aside className="order-2 space-y-7 lg:order-1 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto lg:pr-2">
           <ArbolDeTemas topics={topicsLista} conteos={conteoTemas} filtros={filtros} />
           <Facetas facetas={(facetas.data ?? []) as Faceta[]} filtros={filtros} />
         </aside>
 
-        <section className="min-w-0">
+        <section className="order-1 min-w-0 lg:order-2">
           <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-linea pb-3 text-sm">
             <p className="text-tinta-suave">
               {fallo
