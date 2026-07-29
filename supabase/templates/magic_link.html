@@ -1,0 +1,26 @@
+<!--
+  Código de acceso, no enlace mágico: se pide en la computadora y se lee
+  en el teléfono sin tener que reenviarse el correo.
+
+  En Supabase alojado este archivo NO se aplica solo: hay que pegar el
+  mismo contenido en Authentication › Email Templates › Magic Link.
+-->
+<div style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; color: #16232e; max-width: 480px;">
+  <p style="font-size: 14px; color: #5b6b78; margin: 0 0 4px;">
+    Repositorio de Investigaciones · CAA / ISSSTE
+  </p>
+  <h2 style="font-size: 18px; margin: 0 0 16px;">Tu código de acceso</h2>
+
+  <p style="font-size: 15px; line-height: 1.5; margin: 0 0 16px;">
+    Escribe este código en la pantalla de entrada:
+  </p>
+
+  <p style="font-size: 30px; font-weight: 600; letter-spacing: 8px; font-family: ui-monospace, 'SF Mono', monospace; background: #f7f8f9; border: 1px solid #dfe4e8; border-radius: 6px; padding: 16px; text-align: center; margin: 0 0 16px;">
+    {{ .Token }}
+  </p>
+
+  <p style="font-size: 13px; color: #5b6b78; line-height: 1.5; margin: 0;">
+    Vence en una hora y solo sirve una vez. Si no pediste entrar, ignora
+    este mensaje.
+  </p>
+</div>
