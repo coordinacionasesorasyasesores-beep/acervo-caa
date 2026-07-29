@@ -53,7 +53,7 @@ export function LoginForm({ errorInicial }: { errorInicial?: string }) {
           </button>
 
           {error && (
-            <p className="text-sm leading-relaxed text-red-700" role="alert">
+            <p className="text-sm leading-relaxed text-carmin" role="alert">
               {error}
             </p>
           )}

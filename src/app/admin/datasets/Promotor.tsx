@@ -220,11 +220,11 @@ function Formulario({
       </div>
 
       {listo ? (
-        <p className="rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
+        <p className="rounded border border-jade/40 bg-jade/10 px-3 py-2 text-sm text-bosque">
           Hoja «{activa}» promovida. Aparece arriba, en las ya promovidas.
         </p>
       ) : error ? (
-        <p className="text-sm text-red-700">{error}</p>
+        <p className="text-sm text-carmin">{error}</p>
       ) : cargando ? (
         <p className="animate-pulse text-sm text-tinta-suave">Abriendo el libro…</p>
       ) : (
@@ -362,7 +362,7 @@ function Formulario({
             filas. Las columnas sin etiqueta se quedan fuera.
           </p>
 
-          {problema && <p className="mt-2 text-sm text-red-700">{problema}</p>}
+          {problema && <p className="mt-2 text-sm text-carmin">{problema}</p>}
         </>
       )}
     </div>

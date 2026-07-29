@@ -67,6 +67,7 @@ export default async function ConsultaPage({
         profile={profile}
         topics={topicsLista}
         conteos={conteoTemas}
+        facetas={(facetas.data ?? []) as Faceta[]}
         filtros={filtros}
         totalDocumentos={Number((resultados.data as Fila[])?.[0]?.total ?? 0)}
       />

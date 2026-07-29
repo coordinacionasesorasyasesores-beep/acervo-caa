@@ -12,11 +12,11 @@ export function Cargando({ children }: { children: React.ReactNode }) {
  */
 export function Fallo({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-      <p className="text-sm text-amber-900">
+    <div className="rounded-lg border border-oro/40 bg-oro-claro/20 px-4 py-3">
+      <p className="text-sm text-tinta">
         No se pudo mostrar la vista previa. {children}
       </p>
-      <p className="mt-1 text-xs text-amber-900/80">
+      <p className="mt-1 text-xs text-tinta-suave">
         El archivo está bien; puedes descargarlo con el botón de arriba.
       </p>
     </div>

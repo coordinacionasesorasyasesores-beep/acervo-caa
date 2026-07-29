@@ -112,7 +112,7 @@ function FilaPerfil({ perfil, soyYo }: { perfil: Perfil; soyYo: boolean }) {
 
       <NuevaContrasena id={perfil.id} />
 
-      {estado.error && <span className="text-xs text-red-700">{estado.error}</span>}
+      {estado.error && <span className="text-xs text-carmin">{estado.error}</span>}
     </li>
   )
 }
@@ -165,7 +165,7 @@ function NuevaContrasena({ id }: { id: string }) {
       >
         Cancelar
       </button>
-      {estado.error && <span className="text-xs text-red-700">{estado.error}</span>}
+      {estado.error && <span className="text-xs text-carmin">{estado.error}</span>}
     </form>
   )
 }
@@ -214,7 +214,7 @@ function NuevaCuenta() {
         </button>
       </div>
 
-      {estado.error && <p className="mt-2 text-sm text-red-700">{estado.error}</p>}
+      {estado.error && <p className="mt-2 text-sm text-carmin">{estado.error}</p>}
       {estado.aviso && <p className="mt-2 text-sm text-tinta-suave">{estado.aviso}</p>}
     </form>
   )
@@ -239,14 +239,14 @@ function FilaLista({ entrada }: { entrada: Entrada }) {
           <BotonConfirmar
             pregunta="¿Quitar de la lista?"
             enviando={quitando}
-            className="text-xs text-tinta-suave underline-offset-2 hover:text-red-700 hover:underline"
+            className="text-xs text-tinta-suave underline-offset-2 hover:text-carmin hover:underline"
           >
             Quitar
           </BotonConfirmar>
         </form>
       </div>
 
-      {estado.error && <p className="mt-1 text-xs text-red-700">{estado.error}</p>}
+      {estado.error && <p className="mt-1 text-xs text-carmin">{estado.error}</p>}
       {estado.aviso && <p className="mt-1 text-xs text-tinta-suave">{estado.aviso}</p>}
     </li>
   )
@@ -327,7 +327,7 @@ function NuevoCorreo() {
         registró, cámbiaselo arriba en lugar de aquí.
       </p>
 
-      {estado.error && <p className="mt-2 text-sm text-red-700">{estado.error}</p>}
+      {estado.error && <p className="mt-2 text-sm text-carmin">{estado.error}</p>}
       {estado.aviso && <p className="mt-2 text-sm text-tinta-suave">{estado.aviso}</p>}
     </form>
   )

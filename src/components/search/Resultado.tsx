@@ -92,7 +92,7 @@ const Punto = () => <span aria-hidden>·</span>
 function Distintivo({ estatus }: { estatus: string }) {
   const estilo =
     estatus === 'archivado'
-      ? 'border-amber-300 bg-amber-50 text-amber-900'
+      ? 'border-oro/50 bg-oro-claro/20 text-tinta'
       : 'border-linea bg-papel text-tinta-suave'
 
   return (

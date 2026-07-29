@@ -47,7 +47,7 @@ export function BotonConfirmar({
       <button
         type="submit"
         disabled={enviando}
-        className="rounded border border-red-300 bg-red-50 px-2 py-0.5 text-red-800 transition-colors hover:bg-red-100 disabled:opacity-50"
+        className="rounded border border-carmin/40 bg-carmin/5 px-2 py-0.5 text-carmin transition-colors hover:bg-carmin/10 disabled:opacity-50"
       >
         {enviando ? '…' : confirmar}
       </button>

@@ -15,11 +15,11 @@ export function QuitarDataset({ id }: { id: string }) {
       <BotonConfirmar
         pregunta="Se pierde la declaración de columnas."
         enviando={enviando}
-        className="text-xs text-tinta-suave underline-offset-2 hover:text-red-700 hover:underline"
+        className="text-xs text-tinta-suave underline-offset-2 hover:text-carmin hover:underline"
       >
         Quitar
       </BotonConfirmar>
-      {estado.error && <span className="text-xs text-red-700">{estado.error}</span>}
+      {estado.error && <span className="text-xs text-carmin">{estado.error}</span>}
     </form>
   )
 }

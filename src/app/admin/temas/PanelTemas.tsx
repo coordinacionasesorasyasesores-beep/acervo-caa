@@ -136,7 +136,7 @@ function Fila({
       )}
 
       {(estadoNombre.error || estadoMover.error) && (
-        <span className="text-xs text-red-700">
+        <span className="text-xs text-carmin">
           {estadoNombre.error ?? estadoMover.error}
         </span>
       )}
@@ -210,7 +210,7 @@ function NuevoTema({ padres }: { padres: Topic[] }) {
         </button>
       </div>
 
-      {estado.error && <p className="mt-2 text-sm text-red-700">{estado.error}</p>}
+      {estado.error && <p className="mt-2 text-sm text-carmin">{estado.error}</p>}
     </form>
   )
 }

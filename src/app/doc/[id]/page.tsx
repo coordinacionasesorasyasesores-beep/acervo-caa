@@ -96,7 +96,7 @@ export default async function FichaPage({
               {doc.title}
             </h1>
             {doc.status !== 'publicado' && (
-              <span className="mt-1 shrink-0 rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] tracking-wide text-amber-900 uppercase">
+              <span className="mt-1 shrink-0 rounded border border-oro/50 bg-oro-claro/20 px-2 py-0.5 text-[10px] tracking-wide text-tinta uppercase">
                 {doc.status === 'archivado' ? 'Archivado' : 'Borrador'}
               </span>
             )}

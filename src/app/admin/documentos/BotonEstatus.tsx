@@ -24,12 +24,12 @@ export function BotonEstatus({ id, estatus }: { id: string; estatus: string }) {
         className={`rounded border px-2.5 py-1 text-xs transition-colors disabled:opacity-50 ${
           archivado
             ? 'border-linea bg-white hover:bg-papel'
-            : 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100'
+            : 'border-oro/50 bg-oro-claro/20 text-tinta hover:bg-oro-claro/35'
         }`}
       >
         {enviando ? '…' : archivado ? 'Devolver al acervo' : 'Archivar'}
       </button>
-      {estado.error && <span className="text-xs text-red-700">{estado.error}</span>}
+      {estado.error && <span className="text-xs text-carmin">{estado.error}</span>}
     </form>
   )
 }
