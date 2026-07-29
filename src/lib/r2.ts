@@ -111,6 +111,39 @@ export async function borrarObjeto(key: string): Promise<void> {
 }
 
 /**
+ * Lista las claves bajo un prefijo. Se usa para purgar respaldos viejos.
+ *
+ * Pagina hasta agotar el listado: S3 devuelve mil claves por respuesta y
+ * un respaldo diario pasa de mil en menos de tres años. Quedarse con la
+ * primera página haría que la purga dejara de encontrar lo viejo justo
+ * cuando empieza a haber mucho que purgar.
+ */
+export async function listarObjetos(prefijo: string): Promise<string[]> {
+  const { client, base, bucket } = config()
+  const claves: string[] = []
+  let token: string | null = null
+
+  do {
+    const url = new URL(`${base}/${bucket}`)
+    url.searchParams.set('list-type', '2')
+    url.searchParams.set('prefix', prefijo)
+    if (token) url.searchParams.set('continuation-token', token)
+
+    const res = await client.fetch(url.toString(), { method: 'GET' })
+    if (!res.ok) throw new Error(`No se pudo listar ${prefijo}: ${res.status}`)
+
+    const xml = await res.text()
+    for (const m of xml.matchAll(/<Key>([^<]+)<\/Key>/g)) claves.push(m[1])
+
+    token = /<IsTruncated>true<\/IsTruncated>/.test(xml)
+      ? (xml.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/)?.[1] ?? null)
+      : null
+  } while (token)
+
+  return claves
+}
+
+/**
  * Nombre del objeto en el almacén. Lleva un uuid para que dos archivos
  * llamados "informe final.pdf" no se pisen, y conserva el nombre
  * original legible para cuando alguien mire el bucket a mano.

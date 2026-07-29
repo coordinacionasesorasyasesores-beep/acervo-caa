@@ -1,0 +1,37 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "acervo-caa",
+  "main": ".open-next/worker.js",
+
+  // Lo sube OpenNext, no wrangler a mano: `npm run deploy` construye y
+  // despliega en un paso. Ver §4 del documento maestro.
+  "compatibility_date": "2026-07-01",
+
+  // `nodejs_compat` es requisito del adaptador: el código de Next usa
+  // APIs de Node (Buffer, crypto, streams) que el runtime de Workers solo
+  // expone con esta bandera.
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  // ── Variables ──────────────────────────────────────────────────
+  // Aquí NO van secretos. Las llaves (SUPABASE_SERVICE_ROLE_KEY,
+  // R2_SECRET_ACCESS_KEY, ANTHROPIC_API_KEY) se cargan con
+  // `wrangler secret put <NOMBRE>`, que las guarda cifradas del lado de
+  // Cloudflare. Este archivo se versiona; un secreto aquí es un secreto
+  // en el historial de git para siempre.
+  //
+  // Las NEXT_PUBLIC_* sí pueden ir: por definición viajan al navegador.
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://mmqqtpixmjbdaxmvksoz.supabase.co",
+    "R2_REGION": "auto",
+    "R2_BUCKET": "acervo-caa"
+  }
+}

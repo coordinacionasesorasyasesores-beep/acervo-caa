@@ -1,0 +1,50 @@
+name: Respaldo diario de la base
+
+# El plan gratuito de Supabase no incluye respaldos. Este workflow es el
+# único que hay, así que conviene que falle ruidosamente: si deja de correr
+# sin que nadie lo note, el respaldo no existe pero todos creen que sí.
+on:
+  schedule:
+    # 09:00 UTC = 03:00 en el centro de México. Fuera de horario de trabajo
+    # y lejos de la medianoche, donde se amontonan todos los cron del mundo.
+    - cron: '0 9 * * *'
+  workflow_dispatch: # para poder probarlo a mano sin esperar a mañana
+
+jobs:
+  respaldar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # El pg_dump del runner tiene que ser al menos tan nuevo como el
+      # servidor, o se planta con "server version mismatch". El de Ubuntu
+      # va por detrás, así que se instala el del repositorio de PostgreSQL.
+      - name: Instalar pg_dump 17
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Respaldar
+        env:
+          # Del Session Pooler, no de la conexión directa: los runners de
+          # GitHub no tienen IPv6 (§10 del documento).
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_REGION: auto
+          RESPALDO_DIAS: '30'
+        run: npx tsx scripts/backup.mts
