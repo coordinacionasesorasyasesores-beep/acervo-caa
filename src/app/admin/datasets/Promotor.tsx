@@ -276,11 +276,11 @@ function Formulario({
                             texto se ven idénticas: quien declara no puede
                             saber cuál está declarando. */}
                         {nombreDefecto && (
-                          <p className="mt-1 text-[11px] leading-snug break-words text-tinta-suave">
+                          <p className="mt-1 text-xs leading-snug break-words text-tinta-suave">
                             {nombreDefecto}
                           </p>
                         )}
-                        <p className="mt-0.5 truncate text-[11px] text-tinta-suave italic">
+                        <p className="mt-0.5 truncate text-xs text-tinta-suave italic">
                           ej.: {muestra.map((f) => textoDe(f[i])).filter(Boolean).slice(0, 2).join(' · ') || '—'}
                         </p>
                       </td>

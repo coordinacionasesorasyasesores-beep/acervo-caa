@@ -4,7 +4,9 @@ import { headers } from 'next/headers'
 import { requireSession } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Shell } from '@/components/ui/Shell'
+import { ArrowLeft, Download } from 'lucide-react'
 import { Copiable } from '@/components/ui/Copiable'
+import { IconoArchivo } from '@/components/ui/IconoArchivo'
 import { Vista } from '@/components/preview/Vista'
 
 /**
@@ -85,18 +87,27 @@ export default async function FichaPage({
       <div className="mx-auto max-w-4xl">
         <Link
           href="/"
-          className="text-xs text-acento underline-offset-2 hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm text-acento underline-offset-2 hover:underline"
         >
-          ← Volver a la consulta
+          <ArrowLeft size={15} strokeWidth={2} aria-hidden />
+          Volver a la consulta
         </Link>
 
         <header className="mt-3 border-b border-linea pb-5">
           <div className="flex items-start gap-3">
-            <h1 className="titular min-w-0 flex-1 font-serif text-[1.75rem] leading-tight">
+            {vigente && (
+              <IconoArchivo
+                mime={vigente.mime}
+                filename={vigente.filename}
+                tamano={26}
+                className="mt-1.5"
+              />
+            )}
+            <h1 className="titular min-w-0 flex-1 font-serif text-[2rem] leading-tight">
               {doc.title}
             </h1>
             {doc.status !== 'publicado' && (
-              <span className="mt-1 shrink-0 rounded border border-oro/50 bg-oro-claro/20 px-2 py-0.5 text-[10px] tracking-wide text-tinta uppercase">
+              <span className="mt-1 shrink-0 rounded border border-oro/50 bg-oro-claro/20 px-2 py-0.5 text-[11px] tracking-wide text-tinta uppercase">
                 {doc.status === 'archivado' ? 'Archivado' : 'Borrador'}
               </span>
             )}
@@ -111,8 +122,9 @@ export default async function FichaPage({
               <>
                 <a
                   href={`/api/download/${vigente.id}`}
-                  className="rounded bg-acento px-3.5 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                  className="inline-flex items-center gap-2 rounded-lg bg-acento px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                 >
+                  <Download size={16} strokeWidth={2} aria-hidden />
                   Descargar
                 </a>
                 <span className="text-xs text-tinta-suave">
@@ -148,7 +160,7 @@ export default async function FichaPage({
                 {(versiones ?? []).map((v) => (
                   <li key={v.id} className="flex items-start gap-3 px-4 py-3">
                     <span
-                      className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] tracking-wide uppercase ${
+                      className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[11px] tracking-wide uppercase ${
                         v.id === doc.current_version_id
                           ? 'bg-acento-suave text-acento'
                           : 'bg-papel text-tinta-suave'
@@ -179,8 +191,9 @@ export default async function FichaPage({
 
                     <a
                       href={`/api/download/${v.id}`}
-                      className="shrink-0 text-xs text-acento underline-offset-2 hover:underline"
+                      className="inline-flex shrink-0 items-center gap-1.5 text-xs text-acento underline-offset-2 hover:underline"
                     >
+                      <Download size={13} strokeWidth={2} aria-hidden />
                       Descargar
                     </a>
                   </li>

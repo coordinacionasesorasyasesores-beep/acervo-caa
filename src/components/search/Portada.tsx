@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LogOut, Settings, Upload } from 'lucide-react'
 import { signOut } from '@/app/login/actions'
 import type { SessionProfile } from '@/lib/auth'
 import type { Topic } from '@/lib/catalogos'
@@ -65,9 +66,15 @@ export function Portada({
 
       <header className="relative flex items-center gap-1 px-5 py-4 text-sm sm:px-8">
         <div className="ml-auto flex items-center gap-1">
-          {puedeSubir && <EnlaceTenue href="/subir">Subir</EnlaceTenue>}
+          {puedeSubir && (
+            <EnlaceTenue href="/subir" Icono={Upload}>
+              Subir
+            </EnlaceTenue>
+          )}
           {profile.role === 'admin' && (
-            <EnlaceTenue href="/admin/temas">Administrar</EnlaceTenue>
+            <EnlaceTenue href="/admin/temas" Icono={Settings}>
+              Administrar
+            </EnlaceTenue>
           )}
         </div>
         <div className="ml-3 flex items-center gap-2 border-l border-jade/40 pl-3">
@@ -75,7 +82,8 @@ export function Portada({
             {profile.fullName ?? profile.email}
           </span>
           <form action={signOut}>
-            <button className="rounded px-2 py-1.5 text-xs text-niebla transition-colors hover:text-oro-claro">
+            <button className="inline-flex items-center gap-1.5 rounded px-2 py-1.5 text-xs text-niebla transition-colors hover:text-oro-claro">
+              <LogOut size={13} strokeWidth={2} aria-hidden />
               Salir
             </button>
           </form>
@@ -140,12 +148,23 @@ export function Portada({
   )
 }
 
-function EnlaceTenue({ href, children }: { href: string; children: React.ReactNode }) {
+function EnlaceTenue({
+  href,
+  Icono,
+  children,
+}: {
+  href: string
+  Icono: React.ComponentType<{ size?: number; strokeWidth?: number }>
+  children: React.ReactNode
+}) {
   return (
     <Link
       href={href}
-      className="rounded px-3 py-1.5 text-niebla transition-colors hover:text-oro-claro"
+      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-niebla transition-colors hover:text-oro-claro"
     >
+      <span aria-hidden>
+        <Icono size={15} strokeWidth={1.8} />
+      </span>
       {children}
     </Link>
   )

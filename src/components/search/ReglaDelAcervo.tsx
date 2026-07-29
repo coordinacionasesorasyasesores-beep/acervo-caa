@@ -35,7 +35,7 @@ export function ReglaDelAcervo({
       {/* Sin rótulo, la regla es un adorno bonito: nadie adivina que las
           marcas son años ni que se puede hacer clic. Una línea de seis
           palabras la convierte en un control. */}
-      <p className="mb-2 text-center text-[11px] tracking-wide text-niebla/80">
+      <p className="mb-2 text-center text-xs tracking-wide text-niebla/80">
         Años que cubre el acervo · toca un año para verlo
       </p>
       <div className="relative h-14">
@@ -60,7 +60,7 @@ export function ReglaDelAcervo({
                 className="w-[3px] rounded-full bg-oro transition-all group-hover:w-[5px] group-hover:bg-oro-claro"
                 style={{ height: `${alto}px` }}
               />
-              <span className="absolute -bottom-4 text-[10px] tabular-nums text-niebla opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="absolute -bottom-4 text-[11px] tabular-nums text-niebla opacity-0 transition-opacity group-hover:opacity-100">
                 {anio}
               </span>
             </Link>
@@ -68,11 +68,11 @@ export function ReglaDelAcervo({
         })}
 
         {/* Los extremos rotulados: sin ellos la regla es una decoración. */}
-        <span className="absolute bottom-0 left-0 text-[10px] tabular-nums text-niebla">
+        <span className="absolute bottom-0 left-0 text-[11px] tabular-nums text-niebla">
           {min}
         </span>
         {max !== min && (
-          <span className="absolute right-0 bottom-0 text-[10px] tabular-nums text-niebla">
+          <span className="absolute right-0 bottom-0 text-[11px] tabular-nums text-niebla">
             {max}
           </span>
         )}

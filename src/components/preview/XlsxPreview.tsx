@@ -118,7 +118,7 @@ export function XlsxPreview({ versionId }: { versionId: string }) {
                     onChange={(e) => setFiltros({ ...filtros, [i]: e.target.value })}
                     placeholder="filtrar"
                     aria-label={`Filtrar por ${texto(c) || `columna ${i + 1}`}`}
-                    className="mt-1 w-full min-w-20 rounded border border-linea px-1 py-0.5 text-[11px] font-normal outline-none focus:border-acento"
+                    className="mt-1 w-full min-w-20 rounded border border-linea px-1 py-0.5 text-xs font-normal outline-none focus:border-acento"
                   />
                 </th>
               ))}

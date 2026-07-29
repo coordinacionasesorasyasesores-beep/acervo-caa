@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LogOut, Settings, Upload } from 'lucide-react'
 import type { SessionProfile } from '@/lib/auth'
 import { ROLE_LABEL } from '@/lib/roles'
 import { signOut } from '@/app/login/actions'
@@ -36,12 +37,18 @@ export function Shell({
             </span>
           </Link>
 
-          {busqueda && <div className="min-w-0 max-w-xl flex-1">{busqueda}</div>}
+          {busqueda && <div className="min-w-48 max-w-xl flex-1">{busqueda}</div>}
 
           <nav className="ml-auto flex items-center gap-1 text-sm">
-            {puedeSubir && <NavLink href="/subir">Subir</NavLink>}
+            {puedeSubir && (
+              <NavLink href="/subir" Icono={Upload}>
+                Subir
+              </NavLink>
+            )}
             {profile.role === 'admin' && (
-              <NavLink href="/admin/temas">Administrar</NavLink>
+              <NavLink href="/admin/temas" Icono={Settings}>
+                Administrar
+              </NavLink>
             )}
           </nav>
 
@@ -54,14 +61,16 @@ export function Shell({
               <div className="truncate text-xs text-oro-claro/80">
                 {profile.fullName ?? profile.email}
               </div>
-              <div className="text-[11px] text-niebla">{ROLE_LABEL[profile.role]}</div>
+              <div className="text-xs text-niebla">{ROLE_LABEL[profile.role]}</div>
             </div>
             <form action={signOut}>
               <button
                 type="submit"
-                className="rounded border border-jade/60 px-2.5 py-1.5 text-xs text-niebla transition-colors hover:border-oro hover:text-oro-claro"
+                title="Salir"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-jade/60 px-2 py-1.5 text-xs lg:px-2.5 text-niebla transition-colors hover:border-oro hover:text-oro-claro"
               >
-                Salir
+                <LogOut size={15} strokeWidth={2} aria-hidden />
+                <span className="sr-only lg:not-sr-only">Salir</span>
               </button>
             </form>
           </div>
@@ -73,13 +82,28 @@ export function Shell({
   )
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavLink({
+  href,
+  Icono,
+  children,
+}: {
+  href: string
+  Icono: React.ComponentType<{ size?: number; strokeWidth?: number }>
+  children: React.ReactNode
+}) {
   return (
     <Link
       href={href}
-      className="rounded px-3 py-1.5 text-niebla transition-colors hover:text-oro-claro"
+      title={typeof children === 'string' ? children : undefined}
+      className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-niebla transition-colors hover:text-oro-claro lg:px-3"
     >
-      {children}
+      <span aria-hidden>
+        <Icono size={17} strokeWidth={1.8} />
+      </span>
+      {/* El rótulo desaparece antes que el buscador. El `sr-only` lo
+          mantiene para lectores de pantalla, y el `title` para quien pasa
+          el ratón y no reconoce el icono todavía. */}
+      <span className="sr-only lg:not-sr-only">{children}</span>
     </Link>
   )
 }

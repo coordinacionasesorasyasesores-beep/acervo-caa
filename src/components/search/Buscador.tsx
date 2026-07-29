@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
+import { FolderTree, Search, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { IconoArchivo } from '@/components/ui/IconoArchivo'
 import { urlCon, type Filtros } from '@/lib/busqueda'
 
 /**
@@ -31,6 +33,8 @@ type Sugerencia = {
   etiqueta: string
   detalle: string | null
   cuantos: number | null
+  mime: string | null
+  filename: string | null
 }
 
 export function Buscador({
@@ -168,6 +172,14 @@ export function Buscador({
       )}
 
       <div className="relative">
+        <Search
+          size={esPortada ? 22 : 16}
+          strokeWidth={1.8}
+          aria-hidden
+          className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-tinta-suave ${
+            esPortada ? 'left-6' : 'left-3.5'
+          }`}
+        />
         <input
           ref={campo}
           value={texto}
@@ -188,8 +200,8 @@ export function Buscador({
           autoFocus={esPortada}
           className={
             esPortada
-              ? 'w-full rounded-2xl border border-white/10 bg-papel py-5 pr-32 pl-6 text-base text-tinta shadow-[0_18px_50px_-20px_rgba(0,0,0,0.75)] outline-none placeholder:text-tinta-suave/70 sm:text-lg'
-              : 'w-full rounded-full border border-linea bg-white py-2 pr-24 pl-4 text-sm text-tinta outline-none placeholder:text-tinta-suave/70 focus:border-acento focus:ring-2 focus:ring-acento-suave'
+              ? 'w-full rounded-2xl border border-white/10 bg-papel py-5 pr-32 pl-14 text-base text-tinta shadow-[0_18px_50px_-20px_rgba(0,0,0,0.75)] outline-none placeholder:text-tinta-suave/70 sm:text-lg'
+              : 'w-full rounded-full border border-linea bg-white py-2 pr-24 pl-9 text-sm text-tinta outline-none placeholder:text-tinta-suave/70 focus:border-acento focus:ring-2 focus:ring-acento-suave'
           }
         />
 
@@ -204,10 +216,10 @@ export function Buscador({
                 setTexto('')
                 buscar('')
               }}
-              className="px-2 text-tinta-suave transition-colors hover:text-tinta"
+              className="p-1.5 text-tinta-suave transition-colors hover:text-tinta"
               aria-label="Limpiar la búsqueda"
             >
-              ×
+              <X size={esPortada ? 18 : 15} strokeWidth={2} />
             </button>
           )}
           <button
@@ -248,16 +260,29 @@ export function Buscador({
                   i === resaltada ? 'bg-acento-suave' : 'hover:bg-papel'
                 }`}
               >
-                {/* El tipo se dice, no se dibuja con un icono: "tema" y
-                    "documento" llevan a sitios distintos y conviene que se
-                    lea, no que se adivine. */}
-                <span className="w-16 shrink-0 text-[10px] tracking-wide text-tinta-suave uppercase">
-                  {s.tipo}
+                {/* El icono sustituye al rótulo "DOCUMENTO"/"TEMA": dice
+                    lo mismo ocupando un tercio, y el título recupera el
+                    ancho. Y dice más: distingue un Excel de una
+                    presentación, que la palabra "documento" no distinguía.
+                    Lleva `aria-label` con el formato, así que para un
+                    lector de pantalla informa más que lo que sustituyó. */}
+                <span className="mt-1 flex w-5 shrink-0 justify-center">
+                  {s.tipo === 'documento' ? (
+                    <IconoArchivo mime={s.mime} filename={s.filename} tamano={19} />
+                  ) : (
+                    <FolderTree
+                      size={19}
+                      strokeWidth={1.6}
+                      role="img"
+                      aria-label="Tema"
+                      className="text-tinta-suave"
+                    />
+                  )}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span
-                    className={`block truncate text-sm ${
-                      s.tipo === 'documento' ? 'font-serif text-[0.95rem]' : ''
+                    className={`block truncate ${
+                      s.tipo === 'documento' ? 'font-serif text-lg' : 'text-base'
                     }`}
                   >
                     {s.etiqueta}

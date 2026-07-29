@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { IconoArchivo } from '@/components/ui/IconoArchivo'
 import { trozosResaltados, type Resultado as Fila } from '@/lib/busqueda'
 
 /**
@@ -19,8 +20,17 @@ export function Resultado({
 }) {
   return (
     <article className="border-b border-linea py-4 first:pt-0 last:border-0">
-      <div className="flex items-baseline gap-2">
-        <h3 className="min-w-0 flex-1 font-serif text-[1.05rem] leading-snug">
+      <div className="flex items-baseline gap-2.5">
+        {/* Alineado con la primera línea del título, no centrado en el
+            bloque: con títulos de dos renglones un icono centrado flota
+            a media altura y se lee como decoración. */}
+        <IconoArchivo
+          mime={fila.mime}
+          filename={fila.filename}
+          tamano={19}
+          className="mt-1"
+        />
+        <h3 className="min-w-0 flex-1 font-serif text-xl leading-snug">
           <Link
             href={`/doc/${fila.id}`}
             className="underline-offset-2 hover:underline"
@@ -97,7 +107,7 @@ function Distintivo({ estatus }: { estatus: string }) {
 
   return (
     <span
-      className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] tracking-wide uppercase ${estilo}`}
+      className={`shrink-0 rounded border px-1.5 py-0.5 text-[11px] tracking-wide uppercase ${estilo}`}
     >
       {estatus === 'archivado' ? 'Archivado' : 'Borrador'}
     </span>

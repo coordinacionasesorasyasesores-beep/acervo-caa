@@ -41,6 +41,28 @@
   --color-jade: #225e51;
   --color-niebla: #99989a;
 
+  /* ── Escala tipográfica ──────────────────────────────────────── */
+  /* Sube toda la escala un paso, y se hace **aquí** y no en trescientas
+     clases: cambiar `text-sm` por `text-base` archivo por archivo habría
+     roto el ritmo vertical en sitios distintos y sin forma de revisarlo.
+     Redefinir la escala mueve todo junto y conserva las proporciones.
+     El cuerpo queda en 17 px, que es el tamaño de lectura de iOS: viene
+     de la misma tradición que el resto del diseño y no es un número
+     inventado. Las alturas de línea suben con él, porque texto más grande
+     con el mismo interlineado se ve apretado, no grande. */
+  --text-xs: 0.8125rem;      /* 13 */
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.9375rem;      /* 15 */
+  --text-sm--line-height: 1.55;
+  --text-base: 1.0625rem;    /* 17 */
+  --text-base--line-height: 1.6;
+  --text-lg: 1.1875rem;      /* 19 */
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.375rem;       /* 22 */
+  --text-xl--line-height: 1.35;
+  --text-2xl: 1.625rem;      /* 26 */
+  --text-2xl--line-height: 1.25;
+
   /* Instrument Sans para la interfaz: un grotesco preciso, de formas
      cerradas, que aguanta el interletrado apretado de los titulares sin
      deshacerse. Newsreader para los títulos de documento y el logotipo,

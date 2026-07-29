@@ -269,7 +269,7 @@ function Campo({
         {etiqueta}
         {requerido && <span className="ml-0.5 text-acento">*</span>}
         {sugerido && (
-          <span className="ml-2 rounded bg-acento-suave px-1.5 py-0.5 align-middle text-[10px] font-normal uppercase tracking-wide text-acento">
+          <span className="ml-2 rounded bg-acento-suave px-1.5 py-0.5 align-middle text-[11px] font-normal uppercase tracking-wide text-acento">
             sugerido
           </span>
         )}
