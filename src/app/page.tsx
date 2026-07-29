@@ -3,6 +3,7 @@ import { requireSession } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Shell } from '@/components/ui/Shell'
 import { Buscador } from '@/components/search/Buscador'
+import { Portada } from '@/components/search/Portada'
 import { ArbolDeTemas } from '@/components/search/ArbolDeTemas'
 import { Facetas } from '@/components/search/Facetas'
 import { Resultado } from '@/components/search/Resultado'
@@ -50,6 +51,28 @@ export default async function ConsultaPage({
     }),
   ])
 
+  const topicsLista = (topics.data ?? []) as Topic[]
+  const conteoTemas = new Map<number, number>(
+    ((conteos.data ?? []) as { topic_id: number; cuantos: number }[]).map((c) => [
+      c.topic_id,
+      Number(c.cuantos),
+    ]),
+  )
+
+  // Sin pregunta no hay resultados que enseñar: la portada es el estado
+  // natural de esta pantalla, no un caso especial.
+  if (!hayFiltros(filtros)) {
+    return (
+      <Portada
+        profile={profile}
+        topics={topicsLista}
+        conteos={conteoTemas}
+        filtros={filtros}
+        totalDocumentos={Number((resultados.data as Fila[])?.[0]?.total ?? 0)}
+      />
+    )
+  }
+
   const filas = (resultados.data ?? []) as Fila[]
   const total = Number(filas[0]?.total ?? 0)
   const paginas = Math.ceil(total / POR_PAGINA)
@@ -57,32 +80,19 @@ export default async function ConsultaPage({
 
   if (fallo) console.error('[consulta]', fallo)
 
-  const conteoPorTema = new Map<number, number>(
-    ((conteos.data ?? []) as { topic_id: number; cuantos: number }[]).map((c) => [
-      c.topic_id,
-      Number(c.cuantos),
-    ]),
-  )
-
   return (
-    <Shell profile={profile}>
+    <Shell profile={profile} busqueda={<Buscador filtros={filtros} />}>
       <div className="grid gap-10 lg:grid-cols-[15rem_1fr]">
         {/* La barra se queda fija y con su propio scroll: cuando el acervo
             crezca y el árbol se estire, las facetas siguen alcanzables sin
             recorrer toda la página. */}
         <aside className="space-y-7 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto lg:pr-2">
-          <ArbolDeTemas
-            topics={(topics.data ?? []) as Topic[]}
-            conteos={conteoPorTema}
-            filtros={filtros}
-          />
+          <ArbolDeTemas topics={topicsLista} conteos={conteoTemas} filtros={filtros} />
           <Facetas facetas={(facetas.data ?? []) as Faceta[]} filtros={filtros} />
         </aside>
 
         <section className="min-w-0">
-          <Buscador filtros={filtros} />
-
-          <div className="mt-4 mb-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-linea pb-3 text-sm">
+          <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-linea pb-3 text-sm">
             <p className="text-tinta-suave">
               {fallo
                 ? 'No se pudo consultar el acervo.'

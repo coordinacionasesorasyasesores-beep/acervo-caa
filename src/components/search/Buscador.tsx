@@ -12,8 +12,18 @@ import { urlCon, type Filtros } from '@/lib/busqueda'
  * sería un viaje de ida y vuelta, y los resultados brincarían debajo del
  * cursor mientras la persona todavía está formulando lo que quiere. Se
  * busca al Enter, que además es lo que la gente ya hace.
+ *
+ * Dos tamaños: el de la portada, que es el protagonista, y el de la barra
+ * superior, que acompaña. Mismo componente porque es el mismo objeto —
+ * cambia el tono de voz, no lo que hace.
  */
-export function Buscador({ filtros }: { filtros: Filtros }) {
+export function Buscador({
+  filtros,
+  tamano = 'barra',
+}: {
+  filtros: Filtros
+  tamano?: 'portada' | 'barra'
+}) {
   const router = useRouter()
   const [texto, setTexto] = useState(filtros.q)
 
@@ -23,6 +33,8 @@ export function Buscador({ filtros }: { filtros: Filtros }) {
   function buscar(valor: string) {
     router.push(urlCon(filtros, { q: valor.trim(), pagina: 1 }))
   }
+
+  const esPortada = tamano === 'portada'
 
   return (
     <div className="relative">
@@ -36,19 +48,30 @@ export function Buscador({ filtros }: { filtros: Filtros }) {
             buscar('')
           }
         }}
-        placeholder="Buscar por título, resumen, etiquetas o contenido…"
+        placeholder={
+          esPortada ? 'Buscar en el acervo' : 'Buscar por título, resumen o contenido…'
+        }
         aria-label="Buscar en el acervo"
-        className="w-full rounded-lg border border-linea bg-white py-2.5 pr-24 pl-3.5 text-sm outline-none focus:border-acento focus:ring-2 focus:ring-acento-suave"
+        autoFocus={esPortada}
+        className={
+          esPortada
+            ? 'w-full rounded-full border border-transparent bg-papel py-4 pr-32 pl-6 text-base text-tinta shadow-[0_2px_30px_-8px_rgba(0,0,0,0.5)] outline-none transition-shadow placeholder:text-tinta-suave focus:shadow-[0_2px_40px_-6px_rgba(173,132,44,0.45)]'
+            : 'w-full rounded-full border border-linea bg-white py-2 pr-24 pl-4 text-sm outline-none focus:border-acento focus:ring-2 focus:ring-acento-suave'
+        }
       />
 
-      <div className="absolute inset-y-0 right-2 flex items-center gap-1">
+      <div
+        className={`absolute inset-y-0 flex items-center gap-1 ${
+          esPortada ? 'right-2.5' : 'right-1.5'
+        }`}
+      >
         {texto && (
           <button
             onClick={() => {
               setTexto('')
               buscar('')
             }}
-            className="px-1.5 text-tinta-suave transition-colors hover:text-tinta"
+            className="px-2 text-tinta-suave transition-colors hover:text-tinta"
             aria-label="Limpiar la búsqueda"
           >
             ×
@@ -56,7 +79,11 @@ export function Buscador({ filtros }: { filtros: Filtros }) {
         )}
         <button
           onClick={() => buscar(texto)}
-          className="rounded bg-acento px-3 py-1 text-xs font-medium text-white transition-opacity hover:opacity-90"
+          className={
+            esPortada
+              ? 'rounded-full bg-acento px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90'
+              : 'rounded-full bg-acento px-3 py-1 text-xs font-medium text-white transition-opacity hover:opacity-90'
+          }
         >
           Buscar
         </button>

@@ -20,7 +20,7 @@ export function Resultado({
   return (
     <article className="border-b border-linea py-4 first:pt-0 last:border-0">
       <div className="flex items-baseline gap-2">
-        <h3 className="min-w-0 flex-1 text-[0.95rem] leading-snug font-medium">
+        <h3 className="min-w-0 flex-1 font-serif text-[1.05rem] leading-snug">
           <Link
             href={`/doc/${fila.id}`}
             className="underline-offset-2 hover:underline"
@@ -68,7 +68,7 @@ export function Resultado({
           )}
           {trozosResaltados(fila.fragmento).map((t, i) =>
             t.marcado ? (
-              <mark key={i} className="rounded-sm bg-acento-suave px-0.5 text-tinta">
+              <mark key={i} className="rounded-sm bg-oro-claro px-0.5 text-tinta">
                 {t.texto}
               </mark>
             ) : (

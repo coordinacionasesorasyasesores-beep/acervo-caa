@@ -8,13 +8,13 @@ export default async function LoginPage({
   const { error } = await searchParams
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6">
+    <div className="flex min-h-screen items-center justify-center bg-bosque px-6">
       <div className="w-full max-w-sm">
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold tracking-tight">
-            Repositorio de Investigaciones
+        <div className="mb-8 text-center">
+          <h1 className="titular bg-gradient-to-r from-oro via-oro-claro to-oro bg-clip-text font-serif text-5xl font-normal text-transparent">
+            Acervo
           </h1>
-          <p className="mt-1 text-sm text-tinta-suave">
+          <p className="mt-2 text-sm text-niebla">
             Coordinación de Asesoras y Asesores · ISSSTE
           </p>
         </div>

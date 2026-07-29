@@ -92,7 +92,7 @@ export default async function FichaPage({
 
         <header className="mt-3 border-b border-linea pb-5">
           <div className="flex items-start gap-3">
-            <h1 className="min-w-0 flex-1 text-xl leading-snug font-semibold tracking-tight">
+            <h1 className="titular min-w-0 flex-1 font-serif text-[1.75rem] leading-tight">
               {doc.title}
             </h1>
             {doc.status !== 'publicado' && (

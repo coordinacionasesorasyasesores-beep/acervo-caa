@@ -11,7 +11,7 @@ export function LoginForm({ errorInicial }: { errorInicial?: string }) {
 
   return (
     <>
-      <div className="rounded-lg border border-linea bg-white p-6">
+      <div className="rounded-2xl border border-jade/40 bg-papel p-6 shadow-[0_2px_40px_-12px_rgba(0,0,0,0.6)]">
         <form action={accion} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
@@ -63,7 +63,7 @@ export function LoginForm({ errorInicial }: { errorInicial?: string }) {
       {/* Sin autoservicio de contraseña: no hay correo saliente con el que
           mandar un enlace de recuperación. Decirlo aquí evita que alguien
           busque un "olvidé mi contraseña" que no existe. */}
-      <p className="mt-4 text-center text-xs leading-relaxed text-tinta-suave">
+      <p className="mt-4 text-center text-xs leading-relaxed text-niebla">
         Las cuentas las crea un administrador del área. Si olvidaste tu
         contraseña, pídele que te asigne una nueva.
       </p>

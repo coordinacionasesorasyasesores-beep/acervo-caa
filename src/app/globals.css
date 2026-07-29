@@ -1,15 +1,53 @@
 @import 'tailwindcss';
 
+/**
+ * Identidad de la CAA sobre disciplina de Apple.
+ *
+ * La paleta es la institucional —vino, oro, verde profundo— y no se
+ * negocia. Lo que sí se decide aquí es la proporción: el vino manda en lo
+ * accionable, el verde profundo sostiene, y el oro aparece **una vez por
+ * pantalla**. Un oro repartido en botones, bordes y títulos deja de ser
+ * oro y se vuelve amarillo.
+ *
+ * Los nombres de los tokens no cambiaron al rediseñar. Se usan en unos
+ * trescientos lugares, y renombrarlos habría convertido un cambio de
+ * identidad en una migración con riesgo de romper pantallas por
+ * distracción. Cambian los valores; el código sigue diciendo lo mismo.
+ */
 @theme {
-  --color-tinta: #16232e;
-  --color-tinta-suave: #5b6b78;
-  --color-linea: #dfe4e8;
-  --color-papel: #f7f8f9;
-  --color-acento: #0f5c73;
-  --color-acento-suave: #e6f0f3;
+  /* ── Superficie ──────────────────────────────────────────────── */
+  /* Blanco cálido, no blanco puro: el papel de un archivo, no una hoja
+     de cálculo. Se inclina hacia el oro, no hacia el azul. */
+  --color-papel: #f8f7f4;
+  --color-tinta: #1f2222;
+  /* El #99989a de la identidad no alcanza contraste sobre papel para
+     texto de lectura, así que el gris de texto se oscurece y se tiñe de
+     verde para que pertenezca a la misma familia. */
+  --color-tinta-suave: #5c6360;
+  --color-linea: #e5e1d8;
 
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  /* ── Acento: el vino ─────────────────────────────────────────── */
+  /* Lo accionable es vino. Es el color con más peso institucional de la
+     paleta y el que la gente ya asocia con la Coordinación. */
+  --color-acento: #691932;
+  --color-acento-suave: #f4e9ec;
+
+  /* ── La identidad completa ───────────────────────────────────── */
+  --color-vino: #691932;
+  --color-carmin: #b22245;
+  --color-oro: #ad842c;
+  --color-oro-claro: #edd999;
+  --color-bosque: #12332e;
+  --color-jade: #225e51;
+  --color-niebla: #99989a;
+
+  /* Instrument Sans para la interfaz: un grotesco preciso, de formas
+     cerradas, que aguanta el interletrado apretado de los titulares sin
+     deshacerse. Newsreader para los títulos de documento y el logotipo,
+     porque el contenido *son* documentos: una serif de lectura dice "esto
+     es un texto que vas a leer", que es exactamente lo que es. */
+  --font-sans: var(--fuente-ui), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--fuente-documento), Georgia, serif;
 }
 
 html {
@@ -20,6 +58,32 @@ body {
   background: var(--color-papel);
   color: var(--color-tinta);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Los titulares grandes piden interletrado negativo; los pequeños, no.
+   Es la diferencia entre un titular que se ve dibujado y uno que se ve
+   escrito por descuido. */
+.titular {
+  letter-spacing: -0.022em;
+  line-height: 1.05;
+}
+
+/* El foco visible no es opcional: hay gente que navega con teclado y el
+   anillo por omisión del navegador desaparece contra el verde profundo. */
+:focus-visible {
+  outline: 2px solid var(--color-oro);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /**
@@ -28,15 +92,19 @@ body {
  * Tailwind quita por diseño los márgenes y tamaños de los encabezados, así
  * que sin esto un documento con títulos y listas se ve como un solo bloque
  * de texto corrido: la jerarquía que el autor puso desaparece justo cuando
- * alguien la necesita para orientarse. Se devuelve lo mínimo para que el
- * documento se lea como documento, sin intentar imitar a Word.
+ * alguien la necesita para orientarse.
  */
+.prose-documento {
+  font-family: var(--font-serif);
+}
 .prose-documento h1,
 .prose-documento h2,
 .prose-documento h3,
 .prose-documento h4 {
+  font-family: var(--font-sans);
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
   margin: 1.4em 0 0.5em;
 }
 .prose-documento h1 { font-size: 1.35em; }
@@ -58,7 +126,7 @@ body {
 .prose-documento blockquote {
   margin: 0.9em 0;
   padding-left: 0.9em;
-  border-left: 2px solid var(--color-linea);
+  border-left: 2px solid var(--color-oro);
   color: var(--color-tinta-suave);
 }
 
@@ -73,6 +141,8 @@ body {
   border-collapse: collapse;
   display: block;
   overflow-x: auto;
+  font-family: var(--font-sans);
+  font-size: 0.9em;
 }
 .prose-documento th,
 .prose-documento td {
@@ -80,6 +150,9 @@ body {
   padding: 0.3em 0.6em;
   text-align: left;
 }
-.prose-documento th { background: var(--color-papel); font-weight: 600; }
+.prose-documento th {
+  background: var(--color-papel);
+  font-weight: 600;
+}
 
 .prose-documento img { max-width: 100%; height: auto; }
