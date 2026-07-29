@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import { ROLES, ROLE_LABEL, ROLE_PUEDE, type Role } from '@/lib/roles'
+import { BotonConfirmar } from '@/components/ui/BotonConfirmar'
 import {
   agregarALista,
   cambiarRol,
@@ -116,12 +117,13 @@ function FilaLista({ entrada }: { entrada: Entrada }) {
 
         <form action={quitar}>
           <input type="hidden" name="email" value={entrada.email} />
-          <button
-            disabled={quitando}
-            className="text-xs text-tinta-suave underline-offset-2 hover:text-red-700 hover:underline disabled:opacity-50"
+          <BotonConfirmar
+            pregunta="¿Quitar de la lista?"
+            enviando={quitando}
+            className="text-xs text-tinta-suave underline-offset-2 hover:text-red-700 hover:underline"
           >
             Quitar
-          </button>
+          </BotonConfirmar>
         </form>
       </div>
 

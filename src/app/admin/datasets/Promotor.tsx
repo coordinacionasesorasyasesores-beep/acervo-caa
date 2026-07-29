@@ -89,6 +89,7 @@ function Formulario({
   const [notas, setNotas] = useState('')
   const [problema, setProblema] = useState<string | null>(null)
   const [listo, setListo] = useState(false)
+  const [insistiendo, setInsistiendo] = useState(false)
   const [enviando, empezar] = useTransition()
 
   const temas = temasEnOrden(topics)
@@ -138,6 +139,11 @@ function Formulario({
 
   function cambiar(i: number, campo: keyof ColumnaDeclarada, valor: unknown) {
     setDeclaradas((prev) => ({ ...prev, [i]: { ...prev[i], [campo]: valor } }))
+    // Si acaba de escribir una unidad, la advertencia ya no aplica.
+    if (insistiendo) {
+      setInsistiendo(false)
+      setProblema(null)
+    }
   }
 
   function guardar() {
@@ -167,6 +173,19 @@ function Formulario({
 
     if (columnas.length === 0) {
       setProblema('Declara al menos una columna con etiqueta.')
+      return
+    }
+
+    // Promover es, por definición, declarar unidades (regla 7). Sin una
+    // sola unidad en veintitrés columnas, lo que se está guardando es la
+    // hoja tal cual, y entonces no hay dataset: hay una copia. No se
+    // bloquea —"Año" y "Notas" no tienen unidad, y puede haber hojas que
+    // de verdad sean todo texto— pero sí se pregunta una vez.
+    if (!columnas.some((c) => c.unit) && !insistiendo) {
+      setInsistiendo(true)
+      setProblema(
+        'No declaraste ninguna unidad. Un número sin unidad no se puede sumar sin equivocarse: es lo que separa 6,050,345 pesos de 6,050,345 miles de pesos. Vuelve a pulsar si de verdad esta hoja no lleva unidades.',
+      )
       return
     }
 
@@ -218,6 +237,8 @@ function Formulario({
                   onClick={() => {
                     setActiva(h)
                     setDeclaradas({})
+                    setInsistiendo(false)
+                    setProblema(null)
                   }}
                   className={`rounded border px-2.5 py-1 text-xs transition-colors ${
                     h === activa
@@ -240,14 +261,26 @@ function Formulario({
 
                   return (
                     <tr key={i} className="border-b border-linea last:border-0">
-                      <td className="w-64 border-r border-linea bg-papel px-2 py-1.5 align-top">
+                      <td className="w-80 border-r border-linea bg-papel px-2 py-1.5 align-top">
                         <input
                           defaultValue={nombreDefecto}
                           onChange={(e) => cambiar(i, 'label', e.target.value)}
                           placeholder="(sin declarar)"
+                          title={nombreDefecto}
                           className="w-full rounded border border-linea px-1.5 py-1 outline-none focus:border-acento"
                         />
-                        <p className="mt-1 truncate text-[11px] text-tinta-suave">
+                        {/* El nombre original completo, entero y sin cortar.
+                            El concentrado trae dos columnas que empiezan
+                            igual —"Gasto en obra pública (miles de pesos) —
+                            ANTERIOR" y "— NUEVO"— y dentro de un campo de
+                            texto se ven idénticas: quien declara no puede
+                            saber cuál está declarando. */}
+                        {nombreDefecto && (
+                          <p className="mt-1 text-[11px] leading-snug break-words text-tinta-suave">
+                            {nombreDefecto}
+                          </p>
+                        )}
+                        <p className="mt-0.5 truncate text-[11px] text-tinta-suave italic">
                           ej.: {muestra.map((f) => textoDe(f[i])).filter(Boolean).slice(0, 2).join(' · ') || '—'}
                         </p>
                       </td>
@@ -316,7 +349,11 @@ function Formulario({
               disabled={enviando || filas.length === 0}
               className="rounded bg-acento px-3.5 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {enviando ? 'Promoviendo…' : `Promover «${activa}»`}
+              {enviando
+                ? 'Promoviendo…'
+                : insistiendo
+                  ? 'Promover sin unidades'
+                  : `Promover «${activa}»`}
             </button>
           </div>
 
