@@ -6,7 +6,7 @@ mantenerlo en la raíz del repo y actualizarlo cuando una decisión cambie.
 **Estado:** sprints 1, 2, 4, 5 y 6 terminados y verificados en local; sprint 1 además
 desplegado en `repositorio-caa`. Sprint 3 escrito pero **sin una sola llamada real a
 la API** — falta `ANTHROPIC_API_KEY` y quedó pospuesto a propósito.
-**Última actualización:** 29 de julio de 2026 · rev. 9 (Vercel en vez de Cloudflare; entrada por contraseña).
+**Última actualización:** 29 de julio de 2026 · rev. 10 (las presentaciones se leen como láminas).
 
 **Proyecto de Supabase:** `repositorio-caa` · ref `mmqqtpixmjbdaxmvksoz` · us-east-2 ·
 organización ISSSTE-FREE_PROJECT (plan gratuito).
@@ -474,7 +474,13 @@ que un fallo en el paso 4 no bloquee el guardado (los metadatos se llenan a mano
   - **PDF** → visor completo con `pdfjs-dist`.
   - **Excel** → tabla navegable con selector de hojas y filtros por columna.
   - **Word** → render a HTML con `mammoth`.
-  - **PowerPoint** → sin preview en F1: ficha, texto extraído y descarga.
+  - **PowerPoint** → sin render de láminas en F1. El texto extraído se
+    reconstruye como láminas (`src/lib/laminas.ts`): se parte por
+    `## Diapositiva N`, la primera línea es el título, las cifras seguidas se
+    juntan en una fila con su unidad, los rótulos en mayúsculas se distinguen
+    de la prosa, la fuente va aparte y las láminas que solo son imagen se
+    declaran por número. Ver §10, "Una gráfica de PowerPoint es un muro de
+    renglones".
 - Historial de versiones con nota de cambio, autor y fecha; descarga de cualquiera.
 - Descarga por URL firmada de vida corta, registrada en `access_log`.
 
@@ -712,6 +718,20 @@ implementación y que cuestan horas si se descubren sin aviso.
   imágenes —el caso normal de un archivo de gráficas— pasa sin advertencia y esas
   láminas no quedan buscables. Verificado con un archivo real: 13 diapositivas, y
   de la 8 a la 13 solo se extrajo el número de lámina.
+- **Una gráfica de PowerPoint es un muro de renglones.** Cada etiqueta de un
+  gráfico sale como un fragmento suelto en su propio renglón, así que el texto
+  extraído de una lámina con datos no se parece a la lámina: son cuarenta
+  renglones de `3.62 / consultas / 2.13 / consultas / -41.2% / menos consultas`
+  donde había una tabla de tres columnas. `src/lib/laminas.ts` lo rearma, y esas
+  reglas son las únicas del proyecto que pueden equivocarse **en silencio**: si
+  una decide mal, no falla nada, simplemente el archivo dice algo que no decía.
+  Dos casos reales lo enseñan: un "3" que numeraba un apartado se quedaba con
+  el encabezado siguiente pegado como si fuera su unidad de medida, y un
+  "Caída del" se pegó al `$40,000` anterior en vez de al `79%` que venía
+  debajo. De ahí las dos normas: lo que no se reconoce se deja como párrafo, y
+  la pantalla describe la forma ("seis cifras seguidas") sin nombrar la
+  intención ("escala"). El parser vive en `lib` y no en el componente para
+  poder correrlo contra un archivo de verdad sin abrir un navegador.
 
 ---
 
