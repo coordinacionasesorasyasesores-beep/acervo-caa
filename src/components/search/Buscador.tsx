@@ -228,7 +228,11 @@ export function Buscador({
           id="lista-sugerencias"
           role="listbox"
           aria-label="Sugerencias"
-          className={`absolute right-0 left-0 z-50 overflow-hidden border border-linea bg-white shadow-[0_20px_50px_-15px_rgba(18,51,46,0.45)] ${
+          // `text-tinta` explícito: el desplegable vive dentro de la
+          // portada, que pinta su texto en oro claro sobre verde. Sin
+          // esto, los títulos heredaban el oro y quedaban ilegibles sobre
+          // el blanco de la lista.
+          className={`absolute right-0 left-0 z-50 overflow-hidden border border-linea bg-white text-tinta shadow-[0_20px_50px_-15px_rgba(18,51,46,0.45)] ${
             esPortada ? 'mt-2 rounded-2xl' : 'mt-1.5 rounded-xl'
           }`}
         >
