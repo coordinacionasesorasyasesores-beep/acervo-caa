@@ -3,8 +3,8 @@
 Documento maestro del proyecto. Sirve como contexto permanente para Claude Code:
 mantenerlo en la raíz del repo y actualizarlo cuando una decisión cambie.
 
-**Estado:** sprint 1 terminado y desplegado en el proyecto `repositorio-caa`.
-**Última actualización:** 29 de julio de 2026 · rev. 3 (hallazgos de la implementación del sprint 1).
+**Estado:** sprint 1 desplegado en `repositorio-caa`; sprint 2 terminado y verificado en local contra archivos reales.
+**Última actualización:** 29 de julio de 2026 · rev. 4 (hallazgos de la verificación del sprint 2).
 
 **Proyecto de Supabase:** `repositorio-caa` · ref `mmqqtpixmjbdaxmvksoz` · us-east-2 ·
 organización ISSSTE-FREE_PROJECT (plan gratuito).
@@ -633,6 +633,23 @@ implementación y que cuestan horas si se descubren sin aviso.
 - **La versión de Next la manda OpenNext.** El adaptador de Cloudflare solo soporta
   `>=15.5.21 <16 || >=16.2.11`; las versiones intermedias no. Antes de actualizar
   Next hay que revisar el rango del adaptador, no al revés.
+- **`service_role` no tiene permiso de tabla.** La migración de grants otorga
+  `select, insert, update` a `authenticated` y a nadie más, así que la llave de
+  servicio no puede leer ni escribir ninguna tabla del esquema `public`: PostgREST
+  responde vacío o con un `permission denied` que en el cliente se ve como "no hay
+  datos". Hoy no estorba —la app trabaja siempre con la sesión del usuario, que es
+  lo correcto— pero el día que una ruta de servidor necesite la llave de servicio,
+  el grant hay que agregarlo a propósito y por tabla, nunca en bloque.
+- **Entre `documents` y `versions` hay dos llaves foráneas** (`versions.document_id`
+  y `documents.current_version_id`). PostgREST no adivina cuál usar y responde 300
+  ante `select('...documents(title)')`. Hay que nombrar la llave:
+  `documents!versions_document_id_fkey(title)`. Aparece en cuanto la consulta del
+  sprint 4 junte las dos tablas.
+- **Una lámina sin texto no avisa.** El extractor de PPTX solo advierte cuando la
+  presentación entera viene sin texto. Una donde la mitad de las diapositivas son
+  imágenes —el caso normal de un archivo de gráficas— pasa sin advertencia y esas
+  láminas no quedan buscables. Verificado con un archivo real: 13 diapositivas, y
+  de la 8 a la 13 solo se extrajo el número de lámina.
 
 ---
 
