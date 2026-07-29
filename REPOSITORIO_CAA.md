@@ -3,10 +3,10 @@
 Documento maestro del proyecto. Sirve como contexto permanente para Claude Code:
 mantenerlo en la raíz del repo y actualizarlo cuando una decisión cambie.
 
-**Estado:** sprints 1, 2 y 4 terminados y verificados en local; sprint 1 además
+**Estado:** sprints 1, 2, 4 y 5 terminados y verificados en local; sprint 1 además
 desplegado en `repositorio-caa`. Sprint 3 escrito pero **sin una sola llamada real a
 la API** — falta `ANTHROPIC_API_KEY` y quedó pospuesto a propósito.
-**Última actualización:** 29 de julio de 2026 · rev. 6 (sprint 4 terminado).
+**Última actualización:** 29 de julio de 2026 · rev. 7 (sprint 5 terminado).
 
 **Proyecto de Supabase:** `repositorio-caa` · ref `mmqqtpixmjbdaxmvksoz` · us-east-2 ·
 organización ISSSTE-FREE_PROJECT (plan gratuito).
@@ -580,7 +580,7 @@ No implementar, aunque el esquema los contemple:
 | 2 | ✅ Subida: dropzone, extracción en cliente, R2 con URL firmada, guardado |
 | 3 | ⏸ Metadatos con Claude API y formulario de confirmación — código escrito, sin probar |
 | 4 | ✅ Consulta: buscador FTS, árbol de temas, facetas, fragmentos |
-| 5 | Ficha: previews PDF / Excel / Word, versiones, descarga, bitácora |
+| 5 | ✅ Ficha: previews PDF / Excel / Word, versiones, descarga, bitácora |
 | 6 | Administración: temas, usuarios, archivado, promoción de datasets |
 | 7 | Respaldo automatizado, despliegue en Cloudflare, **carga inicial real** |
 

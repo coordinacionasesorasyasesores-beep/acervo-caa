@@ -21,3 +21,65 @@ body {
   color: var(--color-tinta);
   -webkit-font-smoothing: antialiased;
 }
+
+/**
+ * El Word convertido a HTML por mammoth.
+ *
+ * Tailwind quita por diseño los márgenes y tamaños de los encabezados, así
+ * que sin esto un documento con títulos y listas se ve como un solo bloque
+ * de texto corrido: la jerarquía que el autor puso desaparece justo cuando
+ * alguien la necesita para orientarse. Se devuelve lo mínimo para que el
+ * documento se lea como documento, sin intentar imitar a Word.
+ */
+.prose-documento h1,
+.prose-documento h2,
+.prose-documento h3,
+.prose-documento h4 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+}
+.prose-documento h1 { font-size: 1.35em; }
+.prose-documento h2 { font-size: 1.2em; }
+.prose-documento h3 { font-size: 1.08em; }
+.prose-documento > *:first-child { margin-top: 0; }
+
+.prose-documento p { margin: 0.75em 0; }
+
+.prose-documento ul,
+.prose-documento ol {
+  margin: 0.75em 0;
+  padding-left: 1.4em;
+}
+.prose-documento ul { list-style: disc; }
+.prose-documento ol { list-style: decimal; }
+.prose-documento li { margin: 0.2em 0; }
+
+.prose-documento blockquote {
+  margin: 0.9em 0;
+  padding-left: 0.9em;
+  border-left: 2px solid var(--color-linea);
+  color: var(--color-tinta-suave);
+}
+
+.prose-documento a {
+  color: var(--color-acento);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-documento table {
+  margin: 1em 0;
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+.prose-documento th,
+.prose-documento td {
+  border: 1px solid var(--color-linea);
+  padding: 0.3em 0.6em;
+  text-align: left;
+}
+.prose-documento th { background: var(--color-papel); font-weight: 600; }
+
+.prose-documento img { max-width: 100%; height: auto; }
