@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { LogOut, Settings, Upload } from 'lucide-react'
+import { List, LogOut, Settings, Upload } from 'lucide-react'
 import { signOut } from '@/app/login/actions'
 import type { SessionProfile } from '@/lib/auth'
 import type { Topic } from '@/lib/catalogos'
@@ -125,7 +125,23 @@ export function Portada({
             </nav>
           )}
 
-          <p className="mt-9 text-center text-xs leading-relaxed text-niebla">
+          {/* Buscar supone saber qué se busca. Quien llega sin una pregunta
+              —o quiere comprobar qué hay— necesita una puerta a la lista
+              completa; sin ella, la única forma de ver el acervo entero era
+              adivinar una palabra que apareciera en todo. */}
+          {totalDocumentos > 0 && (
+            <div className="mt-8 text-center">
+              <Link
+                href="/?todos=1"
+                className="inline-flex items-center gap-2 rounded-full border border-jade/50 bg-jade/10 px-5 py-2 text-sm text-oro-claro/90 backdrop-blur-sm transition-colors hover:border-oro/70 hover:bg-jade/25 hover:text-oro-claro"
+              >
+                <List size={15} strokeWidth={1.8} aria-hidden />
+                Ver los {totalDocumentos} documentos
+              </Link>
+            </div>
+          )}
+
+          <p className="mt-6 text-center text-xs leading-relaxed text-niebla">
             {totalDocumentos === 0 ? (
               <>
                 El acervo está vacío.{' '}
@@ -137,8 +153,7 @@ export function Portada({
               </>
             ) : (
               <>
-                {totalDocumentos} documento{totalDocumentos === 1 ? '' : 's'} · busca
-                por título, resumen, etiquetas o por lo que dice adentro
+                Busca por título, resumen, etiquetas o por lo que dice adentro
               </>
             )}
           </p>

@@ -20,6 +20,16 @@ export type Filtros = {
   usos: number[]
   areas: string[]
   estatus: string[]
+  /**
+   * "Enséñame todo", sin filtrar nada.
+   *
+   * No es un filtro —no acota el resultado— sino la decisión de ver la
+   * lista en vez de la portada. Va aparte de `hayFiltros` justo por eso: si
+   * contara como filtro, aparecería un "Limpiar todo" que no limpia nada y
+   * la lista vacía diría "nada coincide con tu búsqueda" cuando lo que pasa
+   * es que el acervo está vacío.
+   */
+  todos: boolean
   orden: Orden
   pagina: number
 }
@@ -80,6 +90,7 @@ export function leerFiltros(params: Entrada): Filtros {
     usos: numeros(params.uso),
     areas: lista(params.area),
     estatus: lista(params.estatus).filter((e) => ESTATUS_VALIDOS.includes(e)),
+    todos: params.todos === '1',
     // Sin texto que ranquear, "relevancia" no significa nada: todos los
     // documentos empatan en cero y el orden queda al azar del planificador.
     orden: params.orden === 'reciente' || !q.trim() ? 'reciente' : 'relevancia',
@@ -119,6 +130,10 @@ export function urlCon(f: Filtros, cambios: Partial<Filtros>): string {
   if (nuevo.usos.length) p.set('uso', nuevo.usos.join(','))
   if (nuevo.areas.length) p.set('area', nuevo.areas.join(','))
   if (nuevo.estatus.length) p.set('estatus', nuevo.estatus.join(','))
+  // Se conserva al tocar una faceta: quien entró por "ver todos" y filtra
+  // por un año sigue explorando la lista, y perderlo lo devolvería a la
+  // portada en cuanto quitara ese último filtro.
+  if (nuevo.todos) p.set('todos', '1')
   // Solo se escribe cuando se aparta del valor por omisión, que con texto
   // es "relevancia". Escribir el otro caso dejaría URLs con ruido; no
   // escribir este dejaba el botón de "ordenar por fecha" sin efecto.
@@ -161,6 +176,11 @@ export function hayFiltros(f: Filtros): boolean {
       f.areas.length ||
       f.estatus.length,
   )
+}
+
+/** Si toca enseñar la lista en vez de la portada. */
+export function mostrarLista(f: Filtros): boolean {
+  return f.todos || hayFiltros(f)
 }
 
 /**

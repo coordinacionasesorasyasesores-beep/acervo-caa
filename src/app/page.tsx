@@ -12,6 +12,7 @@ import {
   aParametros,
   hayFiltros,
   leerFiltros,
+  mostrarLista,
   urlCon,
   type Faceta,
   type Filtros,
@@ -60,8 +61,9 @@ export default async function ConsultaPage({
   )
 
   // Sin pregunta no hay resultados que enseñar: la portada es el estado
-  // natural de esta pantalla, no un caso especial.
-  if (!hayFiltros(filtros)) {
+  // natural de esta pantalla, no un caso especial. La excepción es pedir
+  // ver todo, que es una respuesta legítima aunque no acote nada.
+  if (!mostrarLista(filtros)) {
     return (
       <Portada
         profile={profile}
@@ -109,6 +111,12 @@ export default async function ConsultaPage({
                   <span className="font-medium text-tinta">«{filtros.q}»</span>
                 </>
               )}
+              {/* Confirma lo que se pidió: sin esto, "11 documentos" a secas
+                  no distingue entre el acervo completo y el resultado de un
+                  filtro que se aplicó sin querer. */}
+              {filtros.todos && !hayFiltros(filtros) && !fallo && (
+                <span className="text-tinta"> · todo el acervo</span>
+              )}
             </p>
 
             <div className="flex items-center gap-3">
@@ -125,8 +133,11 @@ export default async function ConsultaPage({
                 </div>
               )}
               {hayFiltros(filtros) && (
+                // Limpiar quita los filtros, no la decisión de estar viendo
+                // la lista: quien llegó por "ver todos" y probó un año
+                // espera volver a la lista completa, no a la portada.
                 <Link
-                  href="/"
+                  href={filtros.todos ? '/?todos=1' : '/'}
                   className="text-xs text-acento underline-offset-2 hover:underline"
                 >
                   Limpiar todo

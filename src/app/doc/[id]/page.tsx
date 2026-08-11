@@ -7,6 +7,7 @@ import { Shell } from '@/components/ui/Shell'
 import { ArrowLeft, Download } from 'lucide-react'
 import { Copiable } from '@/components/ui/Copiable'
 import { IconoArchivo } from '@/components/ui/IconoArchivo'
+import { TituloEditable } from '@/components/ui/TituloEditable'
 import { Vista } from '@/components/preview/Vista'
 
 /**
@@ -35,7 +36,7 @@ export default async function FichaPage({
     .from('documents')
     .select(
       `id, title, summary, year, area, source, status, current_version_id,
-       created_at, updated_at,
+       created_by, created_at, updated_at,
        doc_types(name), doc_uses(name),
        topics!documents_primary_topic_id_fkey(id, name, parent_id),
        owner:profiles!documents_owner_id_fkey(full_name),
@@ -77,6 +78,14 @@ export default async function FichaPage({
     process.env.NEXT_PUBLIC_SITE_URL ??
     `${cabecera.get('x-forwarded-proto') ?? 'http'}://${cabecera.get('host') ?? 'localhost:3000'}`
 
+  // El mismo criterio que la política RLS de `documents`: un admin, o el
+  // autor si tiene permiso de carga. Se calcula aquí solo para decidir si
+  // se pinta el lápiz; quien mande el formulario a mano se topa igual con
+  // la política, que es la que de verdad manda.
+  const puedeEditar =
+    profile.role === 'admin' ||
+    (profile.role === 'cargador' && doc.created_by === profile.id)
+
   const tema = doc.topics as unknown as { id: number; name: string; parent_id: number | null }
   const secundarios = (doc.document_topics ?? [])
     .map((dt) => dt.topics as unknown as { id: number; name: string; parent_id: number | null })
@@ -103,9 +112,11 @@ export default async function FichaPage({
                 className="mt-1.5"
               />
             )}
-            <h1 className="titular min-w-0 flex-1 font-serif text-[2rem] leading-tight">
-              {doc.title}
-            </h1>
+            <TituloEditable
+              id={doc.id}
+              titulo={doc.title}
+              puedeEditar={puedeEditar}
+            />
             {doc.status !== 'publicado' && (
               <span className="mt-1 shrink-0 rounded border border-oro/50 bg-oro-claro/20 px-2 py-0.5 text-[11px] tracking-wide text-tinta uppercase">
                 {doc.status === 'archivado' ? 'Archivado' : 'Borrador'}

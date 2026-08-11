@@ -15,3 +15,4 @@ supabase/.branches/
 respaldos/
 .vercel
 .env*
+cargas/

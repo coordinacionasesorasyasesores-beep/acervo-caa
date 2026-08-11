@@ -14,6 +14,9 @@
     "prueba:humo": "tsx scripts/humo-subida.mts",
     "prueba:metadatos": "tsx scripts/metadatos.mts",
     "prueba:busqueda": "tsx scripts/humo-busqueda.mts",
+    "carga:carpetas": "tsx scripts/crear-carpetas.mts",
+    "carga:preparar": "tsx scripts/preparar-carga.mts",
+    "carga:cargar": "tsx scripts/cargar.mts",
     "respaldo": "tsx scripts/backup.mts"
   },
   "dependencies": {
