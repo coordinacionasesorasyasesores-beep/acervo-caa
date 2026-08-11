@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
 /**
@@ -52,6 +53,50 @@ export async function entrar(
 
   revalidatePath('/', 'layout')
   redirect('/')
+}
+
+/**
+ * Pide el correo de recuperación.
+ *
+ * Cierra el hueco que dejaba la nota de "pídele a un administrador": si
+ * quien olvidó la contraseña **es** el administrador, no había a quién
+ * pedírsela y la única salida era el panel de Supabase. Con un solo admin,
+ * eso es un bloqueo completo del sistema.
+ *
+ * `redirectTo` apunta a `/auth/confirm`, que valida el token en el
+ * servidor y deja la sesión en una cookie. Mandarlo a la raíz devolvería
+ * los tokens en el fragmento de la URL —después del `#`— que el servidor
+ * no ve nunca, y la sesión no llegaría a existir.
+ *
+ * Responde lo mismo exista o no la cuenta: contestar distinto revelaría
+ * qué correos están dados de alta, que es justo lo que la lista de acceso
+ * procura no decir.
+ */
+export async function pedirRecuperacion(
+  _prev: { error?: string; aviso?: string },
+  formData: FormData,
+): Promise<{ error?: string; aviso?: string }> {
+  const email = String(formData.get('email') ?? '').trim().toLowerCase()
+  if (!email.includes('@')) return { error: 'Escribe tu correo.' }
+
+  const cabecera = await headers()
+  const origen =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    `${cabecera.get('x-forwarded-proto') ?? 'http'}://${cabecera.get('host') ?? 'localhost:3000'}`
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origen}/auth/confirm?next=/auth/recuperar`,
+  })
+
+  // El fallo se registra pero no se enseña: el mensaje es el mismo pase lo
+  // que pase, y el detalle sirve para depurar, no para el visitante.
+  if (error) console.error('[recuperacion]', error.message)
+
+  return {
+    aviso:
+      'Si ese correo tiene cuenta, le llegará un enlace para poner una contraseña nueva. Revisa también el correo no deseado.',
+  }
 }
 
 export async function signOut() {

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { revisarContrasena } from '@/lib/contrasena'
 
 /**
  * Gestión de quién entra y con qué rol.
@@ -126,11 +127,6 @@ async function exigirAdmin(): Promise<string | null> {
   return perfil?.role === 'admin' ? null : 'Solo un administrador puede hacer esto.'
 }
 
-/** Doce caracteres: se entrega en persona y se cambia después, no se teclea a diario. */
-function contrasenaValida(p: string): string | null {
-  if (p.length < 12) return 'La contraseña necesita al menos 12 caracteres.'
-  return null
-}
 
 /**
  * Crea la cuenta de alguien que ya está en la lista de acceso.
@@ -152,7 +148,7 @@ export async function crearCuenta(
   const nombre = String(datos.get('full_name') ?? '').trim()
 
   if (!email.includes('@')) return { error: 'Ese correo no parece un correo.' }
-  const malaContrasena = contrasenaValida(password)
+  const malaContrasena = revisarContrasena(password)
   if (malaContrasena) return { error: malaContrasena }
 
   const admin = createAdminClient()
@@ -215,7 +211,7 @@ export async function asignarContrasena(
   const password = String(datos.get('password') ?? '')
   if (!id) return { error: 'Falta la persona.' }
 
-  const malaContrasena = contrasenaValida(password)
+  const malaContrasena = revisarContrasena(password)
   if (malaContrasena) return { error: malaContrasena }
 
   const admin = createAdminClient()
