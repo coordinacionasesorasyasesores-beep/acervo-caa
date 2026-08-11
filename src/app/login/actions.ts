@@ -89,9 +89,27 @@ export async function pedirRecuperacion(
     redirectTo: `${origen}/auth/confirm?next=/auth/recuperar`,
   })
 
-  // El fallo se registra pero no se enseña: el mensaje es el mismo pase lo
-  // que pase, y el detalle sirve para depurar, no para el visitante.
-  if (error) console.error('[recuperacion]', error.message)
+  if (error) console.error('[recuperacion]', error.status, error.message)
+
+  /**
+   * El tope de correos SÍ se dice; el resto de los fallos, no.
+   *
+   * Callar todo era la primera versión, con la idea de no revelar qué
+   * correos tienen cuenta. Pero el tope no habla de la cuenta —es del
+   * proyecto entero, y salta igual con un correo inventado— así que
+   * esconderlo no protege nada y sí manda a la persona a vigilar una
+   * bandeja donde no va a llegar nada. Pasó: el correo integrado de
+   * Supabase admite dos por hora y descarta el resto sin avisar.
+   */
+  const topeAlcanzado =
+    error?.status === 429 || /rate limit/i.test(error?.message ?? '')
+
+  if (topeAlcanzado) {
+    return {
+      error:
+        'Se alcanzó el tope de correos de recuperación por hora. Espera un rato y vuelve a intentarlo; si es urgente, pídele a un administrador que te asigne una contraseña.',
+    }
+  }
 
   return {
     aviso:
