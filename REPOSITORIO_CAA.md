@@ -3,13 +3,22 @@
 Documento maestro del proyecto. Sirve como contexto permanente para Claude Code:
 mantenerlo en la raíz del repo y actualizarlo cuando una decisión cambie.
 
-**Estado:** sprints 1, 2, 4, 5 y 6 terminados y verificados en local; sprint 1 además
-desplegado en `repositorio-caa`. Sprint 3 escrito pero **sin una sola llamada real a
-la API** — falta `ANTHROPIC_API_KEY` y quedó pospuesto a propósito.
-**Última actualización:** 29 de julio de 2026 · rev. 10 (las presentaciones se leen como láminas).
+**Estado:** el acervo está **en producción con contenido real**: 11 documentos
+publicados, 23 versiones, 110 MB. Sprints 1, 2, 4, 5 y 6 terminados y verificados.
+Sprint 3 escrito pero **sin una sola llamada real a la API** — sigue faltando
+`ANTHROPIC_API_KEY`, y por eso la primera carga masiva se catalogó a mano.
+**Última actualización:** 11 de agosto de 2026 · rev. 11 (carga masiva, recuperación
+de contraseña, ver todo el acervo y título editable).
 
 **Proyecto de Supabase:** `repositorio-caa` · ref `mmqqtpixmjbdaxmvksoz` · us-east-2 ·
 organización ISSSTE-FREE_PROJECT (plan gratuito).
+**App en producción:** `acervo-caa.vercel.app` · proyecto de Vercel `acervo-caa`.
+**Repositorio:** `github.com/coordinacionasesorasyasesores-beep/acervo-caa`.
+
+**Publicar son dos pasos.** Vercel **no** está conectado al repositorio: `git push`
+sube el respaldo, y `npx vercel --prod` es lo que despliega. Conectarlo exige
+permiso de administrador sobre el repo, que hoy no se tiene — pertenece a otra
+cuenta de GitHub y se entra como colaborador con permiso de escritura.
 
 ---
 
@@ -362,11 +371,12 @@ operación interna, no para todo lo que tenga formato de capacitación.
 ## 4. Estructura del proyecto
 
 ```
-repositorio-caa/
+acervo-caa/
+├─ CLAUDE.md                   ← mapa de arranque; se lee solo al abrir un chat
 ├─ REPOSITORIO_CAA.md          ← este documento
 ├─ .env.local.example
 ├─ supabase/
-│  ├─ config.toml
+│  ├─ config.toml              ← incluye la lista blanca de redirecciones (§10)
 │  ├─ migrations/              ← SQL versionado
 │  ├─ templates/               ← correo con código de acceso
 │  ├─ tests/sprint1.sql        ← reglas 1, 2 y 3 + roles
@@ -374,34 +384,43 @@ repositorio-caa/
 ├─ src/
 │  ├─ middleware.ts            ← refresco de sesión y puerta al login
 │  ├─ app/
-│  │  ├─ layout.tsx
-│  │  ├─ page.tsx              ← consulta (pantalla principal)
-│  │  ├─ login/                ← entrada por código al correo
+│  │  ├─ page.tsx              ← consulta y portada (una sola pantalla)
+│  │  ├─ login/                ← entrada por contraseña + pedir recuperación
+│  │  ├─ auth/
+│  │  │  ├─ confirm/route.ts   ← aterrizaje de los enlaces del correo
+│  │  │  └─ recuperar/         ← elegir contraseña nueva
 │  │  ├─ subir/page.tsx
-│  │  ├─ doc/[id]/page.tsx     ← ficha + preview + versiones
-│  │  ├─ admin/
-│  │  │  ├─ temas/page.tsx
-│  │  │  ├─ usuarios/page.tsx
-│  │  │  └─ datasets/page.tsx  ← promover Excel a dataset
+│  │  ├─ doc/[id]/
+│  │  │  ├─ page.tsx           ← ficha + preview + versiones
+│  │  │  └─ acciones.ts        ← renombrar desde la propia ficha
+│  │  ├─ admin/                ← temas, usuarios, documentos, datasets
 │  │  └─ api/
-│  │     ├─ upload-url/route.ts    ← presigned PUT a R2
+│  │     ├─ upload-url/route.ts    ← firma la subida directa
 │  │     ├─ metadata/route.ts      ← Claude API
-│  │     └─ download/[id]/route.ts ← presigned GET + bitácora
+│  │     └─ download/[id]/route.ts ← firma la descarga + bitácora
 │  ├─ components/
 │  │  ├─ upload/               ← dropzone, formulario de metadatos
-│  │  ├─ search/               ← buscador, árbol de temas, facetas
-│  │  ├─ preview/              ← PdfPreview, XlsxPreview, DocxPreview
-│  │  └─ ui/
-│  ├─ lib/
-│  │  ├─ auth.ts               ← sesión, roles y guardas de página
-│  │  ├─ supabase/             ← clientes browser y server
-│  │  ├─ r2.ts                 ← presigned URLs (aws4fetch)
-│  │  ├─ extract/              ← pdf.ts, docx.ts, xlsx.ts, pptx.ts
-│  │  ├─ claude.ts
-│  │  └─ types.ts
-│  └─ styles/
-└─ scripts/
-   └─ backup.ts                ← respaldo a R2 (GitHub Actions)
+│  │  ├─ search/               ← buscador, árbol de temas, facetas, portada
+│  │  ├─ preview/              ← Pdf, Xlsx, Docx, Pptx, Texto
+│  │  └─ ui/                   ← Shell, Copiable, TituloEditable, iconos
+│  └─ lib/
+│     ├─ auth.ts               ← sesión y guardas de página (usa next/headers)
+│     ├─ roles.ts              ← rótulos de rol, sin código de servidor (§10)
+│     ├─ contrasena.ts         ← la regla de los 12 caracteres, en un solo sitio
+│     ├─ almacen.ts            ← Supabase Storage por su API nativo
+│     ├─ busqueda.ts           ← el estado del buscador vive en la URL
+│     ├─ extract/              ← pdf, docx, xlsx, pptx (versiones de navegador)
+│     ├─ metadatos.ts          ← prompt y esquema de la sugerencia
+│     └─ supabase/             ← clientes browser, server y admin
+└─ scripts/                    ← todos con `npx tsx`, nunca `npm run` (§12)
+   ├─ comun-carga.mts          ← sesión, catálogos y extractores para Node
+   ├─ crear-carpetas.mts       ← árbol de carpetas con los nombres del catálogo
+   ├─ preparar-carga.mts       ← carpeta → Excel para revisar
+   ├─ cargar.mts               ← Excel revisado → base local
+   ├─ promover.mts             ← local → producción, con historial
+   ├─ migrar-a-produccion.mts  ← OBSOLETO: fue de un solo uso (§12)
+   ├─ backup.mts               ← respaldo diario (GitHub Actions)
+   └─ humo-*.mts, extraccion.mts, metadatos.mts   ← pruebas manuales
 ```
 
 ### Librerías
@@ -421,15 +440,19 @@ repositorio-caa/
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-R2_ACCOUNT_ID=
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_BUCKET=
+ALMACEN_BUCKET=acervo
 ANTHROPIC_API_KEY=
 ```
 
-Ninguna llave de servicio se expone al cliente. `SUPABASE_SERVICE_ROLE_KEY`,
-las credenciales de R2 y la de Anthropic solo se usan en rutas de servidor.
+Ninguna llave de servicio se expone al cliente: `SUPABASE_SERVICE_ROLE_KEY` y la de
+Anthropic solo se usan en rutas de servidor. Las de R2 desaparecieron al pasar el
+almacén al API nativo de Supabase — cada secreto que se elimina es uno menos que
+alguien puede filtrar y uno menos que nadie va a rotar.
+
+`.env.local` trae **dos bloques**: el local, activo, y el de producción
+**comentado a propósito**. Ningún script lo descomenta solo. Los que escriben en
+producción —`promover.mts`— exigen las credenciales por variables de entorno en la
+línea de comandos: escribir en producción tiene que costar trabajo de teclear.
 
 ---
 
@@ -466,10 +489,26 @@ que un fallo en el paso 4 no bloquee el guardado (los metadatos se llenan a mano
   No basta con listar títulos.
 - Distintivo visual de vigente / histórico / archivado.
 - Orden por relevancia o por fecha de actualización.
+- **Puerta a la lista completa** desde la portada ("Ver los N documentos",
+  `/?todos=1`). Buscar supone saber qué se busca; quien llega sin una pregunta
+  —o quiere comprobar qué hay— no tenía forma de ver el acervo entero salvo
+  adivinar una palabra que apareciera en todo.
+
+  `todos` **no cuenta como filtro** y por eso vive fuera de `hayFiltros()`: si
+  contara, aparecería un "Limpiar todo" que no limpia nada y la lista vacía diría
+  "nada coincide con tu búsqueda" cuando lo que pasa es que el acervo está vacío.
+  Filtrar desde la lista no expulsa a la portada, y limpiar devuelve al listado
+  completo, no al inicio.
 
 ### 5.3 Ficha del documento
 
 - Metadatos completos y enlace permanente copiable.
+- **El título se corrige ahí mismo**, con un lápiz al final del texto
+  (`TituloEditable`). En una carga masiva el título lo propone una máquina o se
+  deduce del nombre del archivo, así que corregirlo es la edición más frecuente del
+  sistema; detrás de un formulario aparte, no se hace. Quien no puede editar no ve
+  el lápiz: un botón que no va a funcionar es peor que uno ausente. Quién puede lo
+  decide RLS, no la interfaz — ver §6.
 - Preview según tipo:
   - **PDF** → visor completo con `pdfjs-dist`.
   - **Excel** → tabla navegable con selector de hojas y filtros por columna.
@@ -517,6 +556,37 @@ vector y el extracto y luego se descarta: a la base solo entran el vector y el
 La consulta cruza las dos mitades —`d.search_vector @@ q or v.search_vector @@ q`—
 con `websearch_to_tsquery('spanish', ...)`, ranking sumando los `ts_rank_cd` de
 ambas y fragmentos con `ts_headline` sobre `text_excerpt`.
+
+### 5.6 Recuperar la contraseña
+
+La nota original decía *"pídele a un administrador que te asigne una nueva"*. Si
+quien la olvida **es** el administrador, no hay a quién pedírsela: la única salida
+era el panel de Supabase. Con un solo administrador, eso bloquea el sistema entero.
+Pasó.
+
+El flujo: `/login` → "¿La olvidaste?" → correo → el enlace aterriza en
+`/auth/confirm`, que valida el token en el servidor y deja la sesión en una cookie
+→ `/auth/recuperar`, donde la persona elige su contraseña.
+
+Cuatro decisiones que no son evidentes:
+
+- **La pantalla no pide el correo.** Actúa sobre la sesión que el enlace creó, que
+  es la prueba de que quien está ahí abrió el correo. Aceptar un identificador por
+  el formulario lo convertiría en "cámbiale la contraseña a quien yo diga".
+- **`/auth/confirm` manda cualquier enlace de tipo `recovery` a la pantalla de
+  contraseña aunque no traiga `next`.** La plantilla de fábrica de Supabase no lo
+  incluye, y sin esto la persona entraba pero seguía sin contraseña: entra hoy y
+  mañana vuelve a estar bloqueada.
+- **`next` se limita a rutas propias**, o el enlace sería un redirector abierto.
+- **El tope de correos sí se dice; el resto de los fallos, no.** Callar todo era
+  para no revelar qué correos tienen cuenta, pero el tope es del proyecto entero y
+  salta igual con un correo inventado: esconderlo no protege nada y manda a vigilar
+  una bandeja donde no va a llegar nada.
+
+**Sigue dependiendo del correo, que es frágil** (§10: 2 envíos por hora, solo a
+miembros del proyecto). Por eso la garantía real de no quedar fuera son **dos
+administradores**, para que uno le asigne contraseña al otro desde
+`/admin/usuarios`. El portón de atrás, si ninguno puede entrar, está en `CLAUDE.md`.
 
 ---
 
@@ -674,6 +744,70 @@ implementación y que cuestan horas si se descubren sin aviso.
   Configurar un SMTP externo resuelve las dos cosas de un golpe. Mientras tanto la
   pantalla de entrada acepta los dos caminos, enlace o código, y `/auth/confirm`
   recibe al que llegue por el enlace.
+- **El tope son 2 correos por hora y NO se puede subir.** Medido: el envío número
+  tres devuelve `429 over_email_send_rate_limit` y se descarta sin avisar a nadie.
+  Intentar levantarlo por la API de gestión responde *"Custom SMTP required to
+  configure RATE_LIMIT_EMAIL_SENT"*. Es un tope duro del servicio integrado, no un
+  ajuste. Dejó a un administrador fuera del sistema una tarde entera. Dos
+  consecuencias de diseño: el sistema **no puede depender del correo** para
+  recuperar el acceso —de ahí los dos administradores, para que uno le asigne
+  contraseña al otro— y cualquier pantalla que mande a "revisa tu correo" tiene que
+  distinguir el tope y decirlo (§5.6).
+- **`redirectTo` se descarta en silencio si no está en la lista blanca.** Auth no
+  falla ni avisa: sustituye la URL por `site_url` y sigue. El enlace llega, valida
+  el token y aterriza en el sitio equivocado; el síntoma es una página de error sin
+  causa visible y el código parece correcto. Fue lo que rompió la recuperación de
+  contraseña. Se comprueba sin mandar correos: `generateLink` con `options.redirectTo`
+  y comparar el `redirect_to` que vuelve con el que se pidió. En `config.toml` hay
+  que declarar los destinos con `/**` —sin el comodín solo vale la raíz exacta y
+  `/auth/confirm?next=…` queda fuera— y en el proyecto alojado, lo mismo en
+  Authentication › URL Configuration.
+- **`supabase config push` empuja los 242 campos, no solo el que cambiaste.**
+  Además `config.toml` es la configuración *local*: empujarla a producción le pone
+  la Site URL en `localhost`. Para cambiar dos campos, la API de gestión con un
+  PATCH quirúrgico. El token del CLI está en el llavero de macOS bajo `Supabase CLI`.
+
+### Trampas de los scripts de Node
+
+Los extractores viven en `src/lib/extract/` y están escritos **para el navegador**.
+Importarlos desde un script falla de tres formas distintas, y ninguna dice lo que
+pasa. Por eso `scripts/comun-carga.mts` tiene sus propias versiones.
+
+- **`pdfjs-dist` necesita la build `legacy`.** La normal usa `DOMMatrix` y revienta
+  con `DOMMatrix is not defined`, que suena a problema del PDF y no lo es.
+  Además, `destroy()` vive en la tarea de carga, no en el documento.
+- **`mammoth` en Node quiere `buffer`, no `arrayBuffer`.** Con `arrayBuffer`
+  responde `Could not find file in options`, que suena a archivo corrupto. El campo
+  `browser` del paquete solo redirige al empaquetar; en Node se carga la otra build.
+- **SheetJS no toca el disco sin `XLSX.set_fs(fs)`.** En la build ESM, `readFile` y
+  `writeFile` vienen sin enlazar y fallan con `cannot save file`, que parece un
+  problema de permisos.
+- **Los scripts van con `npx tsx`, no con `npm run`.** npm se come las comillas y
+  una ruta con espacios llega partida en dos argumentos.
+
+### Trampas de nombres de archivo
+
+Salieron todas al agrupar versiones de una carpeta real de Windows y macOS.
+
+- **`\b` no dispara junto a un guion bajo.** Es carácter de palabra para una
+  expresión regular, así que en `verificacion_v12_1` no se reconoce ni la versión ni
+  la fecha. Con nombres de Windows —llenos de guiones bajos— esa sola línea era la
+  diferencia entre detectar las familias y no detectar ninguna. Se normalizan los
+  separadores a espacios **antes** de aplicar cualquier patrón.
+- **`localeCompare` ignora la puntuación en su nivel primario.** Ordenando por
+  nombre, `Data ISSSTE 23072026_3 (1).xlsx` le ganaba a `Data ISSSTE 23072026.xlsx`
+  —el `_3` pesaba menos que el `.xlsx`— y la copia quedaba antes que el original.
+  Para desempatar versiones se compara la raíz del nombre con `<`, que es
+  determinista.
+- **macOS guarda los nombres en NFD.** La "á" es "a" + acento suelto, así que
+  `"Presentación"` escrita en un archivo fuente (NFC) no coincide consigo misma leída
+  del disco. Normalizar los dos lados con `.normalize('NFC')` antes de comparar.
+- **Las fechas del sistema de archivos no sirven para ordenar versiones.** Al copiar
+  una carpeta todas quedan con la fecha de la copia. Lo único que conserva el orden
+  real es lo que alguien escribió en el nombre (`230726`, `903 am`).
+- **`db:reset` no recrea el bucket de almacenamiento** aunque esté declarado en
+  `config.toml`. Hay que crearlo a mano tras un reset, o la primera carga falla con
+  `The related resource does not exist`.
 - **La versión de Next la manda OpenNext.** El adaptador de Cloudflare solo soporta
   `>=15.5.21 <16 || >=16.2.11`; las versiones intermedias no. Antes de actualizar
   Next hay que revisar el rango del adaptador, no al revés.
@@ -746,3 +880,93 @@ implementación y que cuestan horas si se descubren sin aviso.
 - Cada tabla nueva nace con su política RLS en la misma migración.
 - Toda decisión que cambie lo escrito aquí se actualiza en este documento en el
   mismo commit.
+
+---
+
+## 12. Carga masiva
+
+La pantalla de subida sirve para uno o dos documentos. Un acervo que llega en una
+carpeta con cientos de archivos —y con su historial de versiones enredado en los
+nombres— necesita otra cosa.
+
+### El flujo
+
+```bash
+npm run carga:preparar -- "~/carpeta"   # → carga.xlsx + carga.datos.json
+#   revisar y corregir el Excel
+npm run carga:cargar   -- carga.xlsx --ensayo
+npm run carga:cargar   -- carga.xlsx
+#   revisar en la aplicación local, y entonces:
+PROD_URL=… PROD_ANON=… PROD_SVC=… npx tsx scripts/promover.mts
+```
+
+**La plantilla sale prellenada, no vacía.** Es la decisión de diseño: quien cataloga
+corrige mucho más rápido de lo que redacta. Un Excel en blanco para 300 archivos son
+varios días de trabajo y una tasa alta de campos vacíos; uno prellenado son unas
+horas de revisión. Con `--sin-ia` no se gasta API y se rellena solo con lo que la
+ruta y el nombre ya dicen; sin la bandera, Claude lee el texto y propone todo.
+
+**El `.datos.json` no se toca.** Lleva el texto extraído y los checksums para que
+cargar no vuelva a procesar todo, y para que nadie edite un checksum en Excel. Viaja
+junto al `.xlsx`; si se separan, cargar se detiene.
+
+### Agrupar versiones
+
+Varios archivos son el mismo documento guardado varias veces. Se agrupan por
+**nombre de familia** —el nombre sin sus marcas de versión (`v3`, `FINAL`,
+`REVISADA`, `(1)`, fechas, horas)— **y extensión**: un `.xlsx` y un `.pptx` que se
+llaman parecido no son versiones uno del otro, son el concentrado y la presentación
+que salió de él.
+
+El orden lo manda la fecha que **declara el nombre**, no la del sistema de archivos
+(ver §10). Dentro del Excel, dos columnas lo hacen explícito:
+
+| Columna | Qué hace |
+|---|---|
+| `documento` | El agrupador. Filas que lo comparten son un solo documento. |
+| `version` | 1, 2, 3… El orden. La última queda vigente. |
+
+Los metadatos van **solo en la fila de la versión 1**: describen al documento, no al
+archivo, y repetirlos en seis filas invita a que las seis se contradigan.
+
+**El detector se equivoca separando de más, a propósito.** Un documento partido en
+dos se nota al revisar; dos documentos fundidos esconden uno en el historial del
+otro y nadie lo vuelve a ver. Cuando hace falta unir dos familias que el detector
+separó, `--unir "familia1|xlsx + familia2|xlsx"` lo declara por escrito para esa
+carga, sin aflojar la regla general.
+
+### Propiedades que importan más que la velocidad
+
+- **Reanudable.** Cada fila que se logra guarda su uuid en la columna `id`. Volver a
+  correr salta lo hecho, así que si truena en la 140 de 300 se corrige y se
+  reintenta sin duplicar. Una versión que falló dentro de un documento ya creado
+  también se reintenta: no se salta el grupo entero por tener `id` en la primera fila.
+- **Explica.** La fila que no pasa validación deja el motivo en la columna `nota`,
+  en la misma hoja donde está el error. Nadie tiene que leer la terminal.
+- **Detecta duplicados dos veces.** Por checksum dentro de la carpeta y contra lo ya
+  cargado, al preparar y otra vez al cargar: entre los dos pasos alguien pudo subir
+  el mismo archivo por la aplicación.
+
+### Promover a producción
+
+`scripts/promover.mts`. **`migrar-a-produccion.mts` quedó obsoleto**: fue una
+herramienta de un solo uso que aplana el responsable al usuario que corre el script
+y deduplica por título. El nuevo conserva el responsable de cada documento
+—buscándolo por correo en producción— y copia las versiones en orden, de modo que el
+historial llega igual que en local. Es idempotente por título.
+
+**El acervo solo agrega versiones hacia adelante.** No se puede insertar una versión
+anterior a las que ya existen. Si producción ya tiene el archivo final de un
+historial que se va a cargar completo, el orden queda al revés; en ese caso se carga
+en local desde cero y se promueve, que es justo el camino de arriba.
+
+### Lo que no entra
+
+PDF, DOCX, XLSX y PPTX, hasta 50 MB. Los formatos viejos (`.doc`, `.xls`, `.ppt`),
+las imágenes sueltas y los comprimidos quedan fuera y aparecen en la hoja
+`rechazados` con el motivo. **Un PDF escaneado entra pero no es buscable**: no tiene
+capa de texto, así que Claude tampoco puede proponerle metadatos. El script lo avisa
+al terminar, porque si el acervo es papel digitalizado eso deja de ser un detalle y
+se vuelve una conversación sobre OCR.
+
+---
